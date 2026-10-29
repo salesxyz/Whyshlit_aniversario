@@ -1,0 +1,12 @@
+{
+  "name": "whylist",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lista de presentes Whylist com painel administrativo",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node --env-file=.env server.js"
+  }
+}

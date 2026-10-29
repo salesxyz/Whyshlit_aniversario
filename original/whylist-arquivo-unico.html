@@ -1,0 +1,839 @@
+<title>Whylist</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style id="appstyle">
+/* Layout: coluna única, cabeçalho grande com contagem regressiva, cartão Pix e grade de presentes em etiquetas. */
+:root{
+  --bg:#F1F0EC; --surface:#FFFFFF; --ink:#1E1E1C; --muted:#5E5C55; --line:#DEDCD4;
+  --accent:#9A5F00; --accent-soft:#F6E7C8; --on-accent:#FFFFFF;
+  --pix:#0C7C73; --on-pix:#FFFFFF; --pix-soft:#DDF3F0;
+  --good:#1B7F52; --good-soft:#DDF2E7; --warn:#8A5200; --warn-soft:#FFEBC7;
+  --danger:#B4232C; --focus:#2B59FF;
+  --font-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --font-body:"Figtree","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161614; --surface:#20201D; --ink:#F0EFE9; --muted:#B0AEA4; --line:#3A3935;
+    --accent:#F0B84A; --accent-soft:#3A3018; --on-accent:#161614;
+    --pix:#4FDCCB; --on-pix:#0E2B28; --pix-soft:#17393A;
+    --good:#56D79A; --good-soft:#17392B; --warn:#F2BE63; --warn-soft:#3B2F14;
+    --danger:#FF8C92; --focus:#8EA6FF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161614; --surface:#20201D; --ink:#F0EFE9; --muted:#B0AEA4; --line:#3A3935;
+  --accent:#F0B84A; --accent-soft:#3A3018; --on-accent:#161614;
+  --pix:#4FDCCB; --on-pix:#0E2B28; --pix-soft:#17393A;
+  --good:#56D79A; --good-soft:#17392B; --warn:#F2BE63; --warn-soft:#3B2F14;
+  --danger:#FF8C92; --focus:#8EA6FF; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--font-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+body.noscroll{overflow:hidden}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;min-width:0}
+#app{display:flex;flex-direction:column;gap:32px;min-width:0}
+h1,h2,h3,p{margin:0}
+h2{font:700 1.5rem/1.15 var(--font-display);letter-spacing:-.01em}
+h3{font:700 1.1rem/1.25 var(--font-display)}
+.hint{font-size:.875rem;color:var(--muted)}
+.hint.err{color:var(--danger)}
+.hint.ok{color:var(--good)}
+.sub{color:var(--muted);max-width:62ch}
+
+/* Barra do administrador */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding-block:10px}
+.bar-msg{font-size:.9rem;color:var(--muted);flex:1 1 220px;min-width:0}
+.bar.editing .bar-msg{color:var(--ink);font-weight:600}
+.bar-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border:1px solid transparent;border-radius:9px;
+  font:600 .95rem/1.2 var(--font-body);cursor:pointer;text-decoration:none;color:var(--ink);background:transparent}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.pix{background:var(--pix);color:var(--on-pix)}
+.btn.ghost{border-color:var(--line);background:var(--surface)}
+.btn.danger{color:var(--danger)}
+.btn.small{min-height:36px;padding:6px 12px;font-size:.875rem}
+.icon-btn{padding:0;width:44px}
+.link{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink);text-underline-offset:3px}
+.pill{display:inline-flex;align-items:center;gap:6px;width:fit-content;padding:4px 12px;border-radius:999px;font-size:.8rem;font-weight:600}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.muted{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+
+/* Cabeçalho */
+.hero{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px 40px;padding-top:36px}
+.hero-main{flex:1 1 380px;min-width:0}
+.eyebrow{font:600 .78rem/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+h1{font:800 clamp(2.4rem,9vw,4.6rem)/1 var(--font-display);letter-spacing:-.03em;text-wrap:balance;overflow-wrap:anywhere}
+.who{color:var(--accent)}
+.when{font-weight:600;margin-top:16px}
+.msg{max-width:60ch;color:var(--muted);margin-top:10px}
+.count{min-width:0}
+.count .big{display:block;font:800 clamp(3.6rem,13vw,6.4rem)/.9 var(--font-display);color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.count span{display:block;font-size:.9rem;color:var(--muted);margin-top:6px}
+@media (min-width:760px){.count{text-align:right}}
+
+/* Pix */
+.pix-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.pix-card h2{display:flex;align-items:center;gap:10px}
+.pix-card h2::before{content:"";width:12px;height:12px;background:var(--pix);transform:rotate(45deg);border-radius:2px;flex:none}
+.pix-panel{display:grid;grid-template-columns:minmax(0,232px) minmax(0,1fr);gap:22px;align-items:start}
+.pix-info{display:flex;flex-direction:column;gap:12px;min-width:0}
+.qr{background:#fff;border-radius:10px;border:1px solid var(--line);width:100%;max-width:232px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.qr svg{display:block;width:100%;height:100%}
+.qr.small{max-width:150px}
+.qr .hint{padding:12px;color:#444;text-align:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:36px;padding:4px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 .875rem var(--font-body);cursor:pointer}
+.chip:hover{border-color:var(--pix)}
+.code{width:100%;resize:none;font:500 .75rem/1.4 var(--font-mono);word-break:break-all;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px}
+.meta{font-size:.875rem;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+@media (max-width:560px){.pix-panel{grid-template-columns:minmax(0,1fr)}.qr{justify-self:center}}
+
+/* Presentes */
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+.prog-text{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.prog span{display:block;height:100%;background:var(--accent);border-radius:999px}
+#gifts-wrap{display:flex;flex-direction:column;gap:16px;min-width:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px}
+.gift{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.gift-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.gift-top h3{min-width:0;overflow-wrap:anywhere}
+.price{flex:none;position:relative;font:700 .9rem/1.2 var(--font-body);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--accent);background:var(--accent-soft);
+  padding:6px 12px 6px 24px;clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%)}
+.price::before{content:"";position:absolute;left:10px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--surface)}
+.note{color:var(--muted);overflow-wrap:anywhere}
+.gift-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:auto}
+.gift.is-given h3,.gift.is-given .note{opacity:.7}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:28px 20px;color:var(--muted);text-align:center}
+.foot{font-size:.85rem;color:var(--muted);max-width:62ch}
+
+/* Imagens dos presentes */
+.media{display:block;width:100%;aspect-ratio:16/10;border-radius:10px;object-fit:cover;background:var(--accent-soft)}
+.media-icon{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:16/10;border-radius:10px;background:var(--accent-soft);color:var(--accent)}
+.media-icon svg{width:40%;height:40%;max-height:84px}
+.picker{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tab{min-height:40px;padding:8px 14px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--muted);font:600 .9rem var(--font-body);cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.pick-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.thumb{width:96px;aspect-ratio:16/10;border-radius:8px;object-fit:cover;border:1px solid var(--line)}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px}
+.icon-opt{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:64px;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:500 .72rem var(--font-body);cursor:pointer}
+.icon-opt svg{width:24px;height:24px}
+.icon-opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.btn:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.btn input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+label.btn{position:relative}
+
+/* Edição */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 20px 20px}
+.panel summary{cursor:pointer;font:700 1.15rem var(--font-display);padding-block:14px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px 16px}
+.form-grid .wide{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label,.label{font-size:.85rem;font-weight:600}
+input[type=text],input[type=date],select,textarea.in{width:100%;min-height:44px;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+textarea.in{resize:vertical}
+.import{display:flex;flex-direction:column;gap:12px;margin-top:20px;padding:16px;border:1px dashed var(--line);border-radius:12px;min-width:0}
+.pix-test{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.pix-test .txt{flex:1 1 220px;display:flex;flex-direction:column;gap:6px;min-width:0;overflow-wrap:anywhere}
+.add{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px}
+.check{display:inline-flex;align-items:center;gap:8px;font-weight:500;min-height:44px}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px 16px;font-size:.9rem;font-weight:500}
+
+/* Folha de pagamento */
+#sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.sheet-back{position:absolute;inset:0;background:rgba(10,10,30,.6)}
+.sheet-panel{position:relative;background:var(--surface);color:var(--ink);width:min(100%,680px);max-height:calc(100% - 16px);overflow:auto;border-radius:18px 18px 0 0;
+  padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.sheet-head h2{font-size:1.35rem;overflow-wrap:anywhere}
+@media (min-width:700px){#sheet{align-items:center}.sheet-panel{border-radius:18px}}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);opacity:0;pointer-events:none;z-index:60;
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:.9rem;max-width:calc(100% - 32px);text-align:center;transition:opacity .2s,transform .2s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+<div class="wrap"><div id="app"></div></div>
+<div id="sheet" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="application/json" id="state">{"v":1,"honoree":"","date":"","message":"","pix":{"type":"cpf","key":"","name":"","city":""},"gifts":[
+{"id":"ex1","name":"Fone de ouvido sem fio","price":280,"note":"Cor preta, com cancelamento de ruído.","link":"","img":{"t":"icon","k":"tech"},"given":false,"ex":true},
+{"id":"ex2","name":"Jogo de panelas antiaderentes","price":350,"note":"Conjunto com 5 peças.","link":"","img":{"t":"icon","k":"kitchen"},"given":false,"ex":true},
+{"id":"ex3","name":"Jogo de cama queen","price":220,"note":"Algodão, tons claros.","link":"","img":{"t":"icon","k":"home"},"given":true,"ex":true},
+{"id":"ex4","name":"Cafeteira italiana","price":95,"note":"Para 6 xícaras.","link":"","img":{"t":"icon","k":"kitchen"},"given":false,"ex":true},
+{"id":"ex5","name":"Jantar para dois","price":180,"note":"Vale em restaurante a combinar.","link":"","img":{"t":"icon","k":"food"},"given":false,"ex":true},
+{"id":"ex6","name":"Contribuição para a viagem","price":0,"note":"Qualquer valor ajuda.","link":"","img":{"t":"icon","k":"cash"},"given":false,"ex":true}
+]}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script id="appscript">
+(function(){
+"use strict";
+var FONTS="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap";
+var LIB="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+var LIB2="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js";
+var RESET=":root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}";
+var MARKUP='<div class="wrap"><div id="app"></div></div>\n<div id="sheet" hidden></div>\n<div id="toast" role="status" aria-live="polite"></div>';
+var BRL=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+var TYPES=[["cpf","CPF"],["cnpj","CNPJ"],["phone","Celular"],["email","E-mail"],["random","Chave aleatória"]];
+var NS="http://www.w3.org/2000/svg";
+function $(s,r){return (r||document).querySelector(s)}
+
+/*PIX-START*/
+function tlv(id,v){return id+("0"+v.length).slice(-2)+v}
+function crc16(s){var c=0xFFFF;for(var i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(var j=0;j<8;j++){c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF}}return ("000"+c.toString(16).toUpperCase()).slice(-4)}
+function ascii(s,max){return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9 ]/g," ").replace(/\s+/g," ").trim().toUpperCase().slice(0,max).trim()}
+function normKey(type,raw){
+  var v=String(raw||"").trim();
+  if(!v) return {ok:false,msg:"Informe a chave Pix."};
+  if(type==="cpf"||type==="cnpj"){
+    var d=v.replace(/\D/g,""),n=type==="cpf"?11:14;
+    if(d.length!==n) return {ok:false,msg:(type==="cpf"?"O CPF":"O CNPJ")+" precisa ter "+n+" números."};
+    return {ok:true,value:d};
+  }
+  if(type==="phone"){
+    var p=v.replace(/[^\d+]/g,""),digits=p.replace(/\D/g,""),out;
+    if(p.charAt(0)==="+") out="+"+digits;
+    else if(digits.length>=12&&digits.slice(0,2)==="55") out="+"+digits;
+    else out="+55"+digits;
+    if(!/^\+55\d{10,11}$/.test(out)) return {ok:false,msg:"Use o celular com DDD, por exemplo (61) 99999-0000."};
+    return {ok:true,value:out};
+  }
+  if(type==="email"){
+    var e=v.toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)||e.length>77) return {ok:false,msg:"E-mail inválido."};
+    return {ok:true,value:e};
+  }
+  var r=v.toLowerCase();
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(r)) return {ok:false,msg:"A chave aleatória tem o formato 8-4-4-4-12 caracteres."};
+  return {ok:true,value:r};
+}
+function pixConfig(p,honoree){
+  p=p||{};
+  var k=normKey(p.type||"cpf",p.key);
+  if(!k.ok) return {ok:false,msg:k.msg};
+  var name=ascii(p.name||honoree,25);
+  if(!name) return {ok:false,msg:"Informe o nome do recebedor."};
+  return {ok:true,key:k.value,name:name,city:ascii(p.city,15)||"BRASIL"};
+}
+function buildPix(c,amount){
+  var mai=tlv("00","BR.GOV.BCB.PIX")+tlv("01",c.key);
+  var s=tlv("00","01")+tlv("01","11")+tlv("26",mai)+tlv("52","0000")+tlv("53","986");
+  if(amount>0) s+=tlv("54",amount.toFixed(2));
+  s+=tlv("58","BR")+tlv("59",c.name)+tlv("60",c.city)+tlv("62",tlv("05","***"))+"6304";
+  return s+crc16(s);
+}
+function parseBRL(t){
+  var s=String(t||"").replace(/[^\d.,]/g,"");
+  if(!s) return null;
+  if(s.indexOf(",")>-1) s=s.replace(/\./g,"").replace(",",".");
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,"");
+  var n=Number(s);
+  return isFinite(n)?Math.round(n*100)/100:NaN;
+}
+function parseTlv(s){
+  var o={},i=0;
+  while(i<s.length){
+    if(i+4>s.length) return null;
+    var l=parseInt(s.substr(i+2,2),10);
+    if(isNaN(l)||i+4+l>s.length) return null;
+    o[s.substr(i,2)]=s.substr(i+4,l);i+=4+l;
+  }
+  return o;
+}
+function keyType(k){
+  if(k.indexOf("@")>-1) return "email";
+  if(/^\+\d{10,15}$/.test(k)) return "phone";
+  if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k)) return "random";
+  if(/^\d{14}$/.test(k)) return "cnpj";
+  if(/^\d{11}$/.test(k)) return "cpf";
+  return null;
+}
+function readPix(text){
+  var t=String(text||"").replace(/[\r\n]+/g,"").trim();
+  if(t.indexOf("000201")!==0) return {ok:false,msg:"Isso não parece um código Pix. Ele começa com 000201."};
+  if(t.length<12||crc16(t.slice(0,-4))!==t.slice(-4).toUpperCase()) return {ok:false,msg:"O código Pix está incompleto ou foi alterado. Copie o código inteiro de novo."};
+  var top=parseTlv(t.slice(0,-8));
+  if(!top) return {ok:false,msg:"Não consegui ler esse código Pix."};
+  var acc=null;
+  for(var id=26;id<=51&&!acc;id++){
+    var k=("0"+id).slice(-2);
+    if(top[k]){var sub=parseTlv(top[k]);if(sub&&/^br\.gov\.bcb\.pix$/i.test(sub["00"]||"")) acc=sub}
+  }
+  if(!acc) return {ok:false,msg:"Não encontrei uma chave Pix neste código."};
+  if(!acc["01"]) return {ok:false,msg:acc["25"]?"Este QR code é de uma cobrança, sem chave dentro. Use o QR code da sua chave Pix no app do banco.":"Não encontrei uma chave Pix neste código."};
+  var key=acc["01"],type=keyType(key);
+  if(!type) return {ok:false,msg:"Não reconheci o tipo dessa chave Pix."};
+  return {ok:true,type:type,key:type==="email"||type==="random"?key.toLowerCase():key,name:top["59"]||"",city:top["60"]||""};
+}
+/*PIX-END*/
+
+function safeUrl(v){
+  v=String(v||"").trim();
+  if(!v) return "";
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(v)) v="https://"+v;
+  try{var u=new URL(v);return (u.protocol==="https:"||u.protocol==="http:")?u.href:null}catch(e){return null}
+}
+function parseDate(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||"");return m?{y:+m[1],m:+m[2],d:+m[3]}:null}
+function daysLeft(s){
+  var p=parseDate(s);if(!p) return null;
+  var now=new Date(),t=new Date(now.getFullYear(),now.getMonth(),now.getDate()),n=new Date(t.getFullYear(),p.m-1,p.d);
+  if(n<t) n=new Date(t.getFullYear()+1,p.m-1,p.d);
+  return Math.round((n-t)/864e5);
+}
+function fmtDate(s){var p=parseDate(s);return new Date(p.y,p.m-1,p.d).toLocaleDateString("pt-BR",{day:"numeric",month:"long"})}
+
+function h(tag,props){
+  var el=document.createElement(tag),kids=Array.prototype.slice.call(arguments,2);
+  if(props) for(var k in props){
+    var v=props[k];
+    if(v==null||v===false) continue;
+    if(k==="class") el.className=v;
+    else if(k==="text") el.textContent=v;
+    else if(k==="style") Object.assign(el.style,v);
+    else if(k.slice(0,2)==="on") el.addEventListener(k.slice(2),v);
+    else el.setAttribute(k,v===true?"":v);
+  }
+  kids.forEach(function(kid){
+    [].concat(kid).forEach(function(c){
+      if(c==null||c===false) return;
+      el.append(c.nodeType?c:document.createTextNode(c));
+    });
+  });
+  return el;
+}
+var ICONS={
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16v4z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>'
+};
+function icon(n){
+  var s=document.createElementNS(NS,"svg");
+  s.setAttribute("viewBox","0 0 24 24");s.setAttribute("width","18");s.setAttribute("height","18");s.setAttribute("fill","none");
+  s.setAttribute("stroke","currentColor");s.setAttribute("stroke-width","2");s.setAttribute("stroke-linecap","round");s.setAttribute("stroke-linejoin","round");s.setAttribute("aria-hidden","true");
+  s.innerHTML=ICONS[n];
+  return s;
+}
+
+/* Imagens dos presentes: foto enviada pelo admin ou ícone pronto */
+var assetsApi=null;
+var PICS={
+  gift:["Presente",'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8C10 4.500 6.500 5 7.500 7.500c.5 1.200 2.500 1 4.500.5zM12 8c2-3.500 5.500-3 4.500-.5-.5 1.200-2.500 1-4.500.5z"/>'],
+  tech:["Eletrônicos",'<path d="M4 16v-4a8 8 0 0 1 16 0v4"/><rect x="3" y="14" width="4" height="7" rx="1.500"/><rect x="17" y="14" width="4" height="7" rx="1.500"/>'],
+  kitchen:["Cozinha",'<path d="M4 10h16v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3zM2 12h2M20 12h2M9 6c0-1.500 1-1.500 1-3M14 6c0-1.500 1-1.500 1-3"/>'],
+  home:["Casa",'<path d="M3 19V7M3 15h18v4M21 15v-3a3 3 0 0 0-3-3h-8v6"/><circle cx="6.500" cy="11.500" r="1.500"/>'],
+  book:["Livros",'<path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2zM4 20a2 2 0 0 1 2-2h13"/>'],
+  style:["Roupas",'<path d="M8 3L3 6l2 4 3-1v12h8V9l3 1 2-4-5-3a4 4 0 0 1-8 0z"/>'],
+  trip:["Viagem",'<path d="M21 3L3 10l7 3 3 7zM10 13L21 3"/>'],
+  food:["Comida",'<path d="M7 3v7M4.500 3v4.500a2.500 2.500 0 0 0 5 0V3M7 10v11M17 21V3c-2.500 1-3 4-3 7 0 1.500 1 2 3 2"/>'],
+  cash:["Dinheiro",'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.500"/><path d="M6 12h.01M18 12h.01"/>']
+};
+function pickSvg(k,size){
+  var s=document.createElementNS(NS,"svg");
+  s.setAttribute("viewBox","0 0 24 24");s.setAttribute("width",size);s.setAttribute("height",size);s.setAttribute("fill","none");
+  s.setAttribute("stroke","currentColor");s.setAttribute("stroke-width","1.6");s.setAttribute("stroke-linecap","round");s.setAttribute("stroke-linejoin","round");s.setAttribute("aria-hidden","true");
+  s.innerHTML=PICS[k][1];
+  return s;
+}
+function imgOf(g){
+  var i=g&&g.img;
+  if(!i) return null;
+  if(i.t==="asset"&&/^[0-9a-f]{32}$/.test(String(i.id))) return {t:"asset",id:i.id};
+  if(i.t==="icon"&&PICS[i.k]) return {t:"icon",k:i.k};
+  return null;
+}
+function mediaEl(g){
+  var i=imgOf(g);
+  if(!i) return null;
+  if(i.t==="asset") return h("img",{class:"media",src:"/_blob/"+i.id,alt:g.name,loading:"lazy"});
+  var d=h("div",{class:"media-icon","aria-hidden":"true"});
+  d.append(pickSvg(i.k,48));
+  return d;
+}
+function shrink(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file),im=new Image();
+    im.onload=function(){
+      var sc=Math.min(1,900/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*sc)),hh=Math.max(1,Math.round(im.naturalHeight*sc));
+      var cv=document.createElement("canvas");cv.width=w;cv.height=hh;
+      var cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,w,hh);cx.drawImage(im,0,0,w,hh);
+      URL.revokeObjectURL(url);
+      cv.toBlob(function(b){b?res(b):rej(new Error("img"))},"image/jpeg",0.82);
+    };
+    im.onerror=function(){URL.revokeObjectURL(url);rej(new Error("img"))};
+    im.src=url;
+  });
+}
+function decodeQr(file){
+  return new Promise(function(res,rej){
+    if(typeof jsQR!=="function") return rej(new Error("lib"));
+    var url=URL.createObjectURL(file),im=new Image();
+    im.onload=function(){
+      var sc=Math.min(1,1400/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.max(1,Math.round(im.naturalWidth*sc)),hh=Math.max(1,Math.round(im.naturalHeight*sc));
+      var cv=document.createElement("canvas");cv.width=w;cv.height=hh;
+      var cx=cv.getContext("2d",{willReadFrequently:true});cx.fillStyle="#fff";cx.fillRect(0,0,w,hh);cx.drawImage(im,0,0,w,hh);
+      URL.revokeObjectURL(url);
+      var d=cx.getImageData(0,0,w,hh),r=jsQR(d.data,w,hh,{inversionAttempts:"attemptBoth"});
+      r&&r.data?res(r.data):rej(new Error("noqr"));
+    };
+    im.onerror=function(){URL.revokeObjectURL(url);rej(new Error("img"))};
+    im.src=url;
+  });
+}
+function importPix(text){
+  var r=readPix(text),m=$("#imp-msg");
+  if(!r.ok){if(m){m.textContent=r.msg;m.className="hint err"}return}
+  var p=draft.pix;
+  p.type=r.type;p.key=r.key;
+  if(r.name) p.name=r.name;
+  if(r.city) p.city=r.city;
+  setDirty();render();
+  toast("Chave importada. Confira os dados e teste o QR code.");
+  var k=$("#f-key");if(k) k.scrollIntoView({block:"center"});
+}
+function importBlock(){
+  var msg=h("p",{class:"hint",id:"imp-msg",role:"status"}),inp=h("input",{type:"file",accept:"image/*",id:"imp-file"});
+  var ta=h("textarea",{id:"imp-text",class:"in",rows:2,placeholder:"00020126…",autocomplete:"off",spellcheck:"false"});
+  inp.addEventListener("change",function(){
+    var f=inp.files&&inp.files[0];
+    if(!f) return;
+    msg.textContent="Lendo o QR code…";msg.className="hint";
+    decodeQr(f).then(importPix).catch(function(e){
+      var c=e&&e.message;
+      msg.textContent=c==="lib"?"O leitor de QR code não carregou. Cole o Pix copia e cola abaixo.":
+        c==="noqr"?"Não encontrei um QR code nessa imagem. Use um print só do QR code, inteiro e sem reflexo.":
+        "Não foi possível ler essa imagem. Use JPG ou PNG.";
+      msg.className="hint err";
+    });
+  });
+  return h("div",{class:"import"},
+    h("h3",{text:"Importar a chave de um QR code"}),
+    h("p",{class:"hint",text:"No app do seu banco, abra o QR code da sua chave Pix e tire um print. Envie a imagem aqui ou cole o Pix copia e cola. A página lê a chave, o nome e a cidade e preenche os campos."}),
+    h("div",{class:"pick-row"},h("label",{class:"btn ghost small"},icon("plus"),"Enviar print do QR code",inp)),
+    h("div",{class:"field"},h("label",{for:"imp-text",text:"Ou cole o Pix copia e cola"}),ta),
+    h("div",{class:"btn-row"},h("button",{class:"btn ghost small",type:"button",onclick:function(){
+      if(!ta.value.trim()){msg.textContent="Cole o código primeiro.";msg.className="hint err";ta.focus();return}
+      importPix(ta.value);
+    }},"Ler código")),
+    msg);
+}
+function imagePicker(idp,getImg,setImg){
+  var cur0=getImg(),tab=(cur0&&cur0.t==="icon")||!assetsApi?"icon":"photo",root=h("div",{class:"picker"});
+  function draw(){
+    var cur=getImg(),tabs=h("div",{class:"tabs",role:"tablist","aria-label":"Opções de imagem"});
+    if(tab==="photo"&&!assetsApi) tab="icon";
+    [["photo","Foto"],["icon","Ícones"]].forEach(function(t){
+      if(t[0]==="photo"&&!assetsApi) return;
+      tabs.append(h("button",{class:"tab",type:"button",role:"tab",id:idp+"-tab-"+t[0],"aria-selected":tab===t[0]?"true":"false","aria-controls":idp+"-panel",onclick:function(){tab=t[0];draw()}},t[1]));
+    });
+    var panel=h("div",{id:idp+"-panel",role:"tabpanel","aria-labelledby":idp+"-tab-"+tab});
+    if(tab==="photo"){
+      var msg=h("p",{class:"hint",role:"status"}),inp=h("input",{type:"file",accept:"image/*",id:idp+"-file"});
+      inp.addEventListener("change",function(){
+        var f=inp.files&&inp.files[0];
+        if(!f) return;
+        if(!/^image\//.test(f.type)){msg.textContent="Escolha um arquivo de imagem.";msg.className="hint err";return}
+        msg.textContent="Enviando…";msg.className="hint";
+        shrink(f).then(function(b){return assetsApi.upload(b)}).then(function(r){setImg({t:"asset",id:r.id});draw()}).catch(function(e){
+          msg.textContent=(e&&e.message==="img")?"Não foi possível ler essa imagem. Use JPG ou PNG.":"Não foi possível enviar a imagem. Tente de novo.";
+          msg.className="hint err";
+        });
+      });
+      panel.append(h("div",{class:"pick-row"},
+        cur&&cur.t==="asset"?h("img",{class:"thumb",src:"/_blob/"+cur.id,alt:"Imagem atual"}):null,
+        h("label",{class:"btn ghost small"},icon("plus"),cur&&cur.t==="asset"?"Trocar foto":"Enviar foto",inp)),
+        msg,h("p",{class:"hint",text:"A foto é reduzida antes do envio. Aceita JPG, PNG e WebP."}));
+    }else{
+      panel.append(h("div",{class:"icon-grid"},Object.keys(PICS).map(function(k){
+        return h("button",{class:"icon-opt",type:"button","aria-pressed":cur&&cur.t==="icon"&&cur.k===k?"true":"false",onclick:function(){setImg({t:"icon",k:k});draw()}},pickSvg(k,24),PICS[k][0]);
+      })));
+    }
+    root.replaceChildren.apply(root,[tabs,panel,cur?h("div",{class:"btn-row"},h("button",{class:"btn ghost small danger",type:"button",onclick:function(){setImg(null);draw()}},icon("trash"),"Sem imagem")):null].filter(Boolean));
+  }
+  draw();
+  return root;
+}
+
+/* Estado */
+var saved=JSON.parse($("#state").textContent),draft=null,editing=false,dirty=false,isAdmin=false,art=null,saving=false,armed=false;
+function cur(){return editing?draft:saved}
+function uid(){return "g"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove("show")},2800)}
+function setDirty(){dirty=true;var st=$("#bar-status");if(st) st.textContent="Alterações não salvas"}
+
+/* QR code */
+function qrSvg(text){
+  if(typeof qrcode!=="function") return null;
+  try{
+    var q=qrcode(0,"M");q.addData(text);q.make();
+    var n=q.getModuleCount(),m=4,size=n+m*2,d="";
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++) if(q.isDark(r,c)) d+="M"+(c+m)+" "+(r+m)+"h1v1h-1z";
+    var svg=document.createElementNS(NS,"svg");
+    svg.setAttribute("viewBox","0 0 "+size+" "+size);svg.setAttribute("role","img");svg.setAttribute("aria-label","QR code Pix");svg.setAttribute("shape-rendering","crispEdges");
+    var bg=document.createElementNS(NS,"rect");bg.setAttribute("width",size);bg.setAttribute("height",size);bg.setAttribute("fill","#ffffff");
+    var p=document.createElementNS(NS,"path");p.setAttribute("d",d);p.setAttribute("fill","#000000");
+    svg.append(bg,p);
+    return svg;
+  }catch(e){return null}
+}
+function copyText(t){
+  function fallback(){
+    try{var ta=h("textarea",{readonly:true,"aria-hidden":"true"});ta.style.cssText="position:fixed;opacity:0;top:0;left:0";ta.value=t;document.body.append(ta);ta.select();var ok=document.execCommand("copy");ta.remove();return ok}catch(e){return false}
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(t).then(function(){return true},function(){return fallback()});
+  return Promise.resolve(fallback());
+}
+function copyBtn(label,getText,sel){
+  return h("button",{class:"btn ghost small",type:"button",onclick:function(){
+    copyText(getText()).then(function(ok){
+      if(ok) toast("Copiado");
+      else{toast("Não foi possível copiar. Selecione o texto e copie.");if(sel) sel.select()}
+    });
+  }},icon("copy"),label);
+}
+
+/* Painel Pix: valor, QR code e copia e cola */
+function pixPanel(cfg,opts){
+  var amt=h("input",{id:opts.idp+"-amount",type:"text",inputmode:"decimal",placeholder:"Qualquer valor",autocomplete:"off",value:opts.amount?String(opts.amount).replace(".",","):""});
+  var err=h("p",{class:"hint err",role:"status"}),qrBox=h("div",{class:"qr"}),sum=h("p",{class:"meta"});
+  var code=h("textarea",{id:opts.idp+"-code",class:"code",readonly:true,rows:4,"aria-label":"Pix copia e cola"});
+  function update(){
+    var a=parseBRL(amt.value),bad=(a!==null)&&(isNaN(a)||a<=0||a>999999.99);
+    err.textContent=bad?"Digite um valor entre R$ 0,01 e R$ 999.999,99.":"";
+    var v=(a!==null&&!bad)?a:0,payload=buildPix(cfg,v),svg=qrSvg(payload);
+    code.value=payload;
+    qrBox.replaceChildren(svg||h("p",{class:"hint",text:"QR code indisponível. Use o Pix copia e cola."}));
+    sum.textContent=v?"Valor: "+BRL.format(v):"Valor livre: quem paga escolhe no app do banco.";
+  }
+  amt.addEventListener("input",update);
+  var chips=h("div",{class:"chips"},(opts.chips||[]).map(function(v){
+    return h("button",{class:"chip",type:"button",onclick:function(){amt.value=String(v);update()}},BRL.format(v).replace(",00",""));
+  }));
+  code.addEventListener("focus",function(){code.select()});
+  update();
+  return h("div",{class:"pix-panel"},qrBox,
+    h("div",{class:"pix-info"},
+      h("div",{class:"field"},h("label",{for:opts.idp+"-amount",text:"Valor (R$)"}),amt),
+      opts.chips&&opts.chips.length?chips:null,err,sum,
+      h("p",{class:"meta"},"Recebedor: ",h("b",{text:cfg.name})),
+      h("label",{class:"label",for:opts.idp+"-code",text:"Pix copia e cola"}),code,
+      h("div",{class:"btn-row"},copyBtn("Copiar código",function(){return code.value},code),copyBtn("Copiar chave",function(){return cfg.key}))));
+}
+
+/* Folha de pagamento de um presente */
+var sheetEl=$("#sheet"),lastFocus=null;
+function openSheet(g,cfg,name){
+  lastFocus=document.activeElement;
+  var close=h("button",{class:"btn ghost icon-btn",type:"button","aria-label":"Fechar",onclick:closeSheet},icon("x"));
+  sheetEl.replaceChildren(
+    h("div",{class:"sheet-back",onclick:closeSheet}),
+    h("div",{class:"sheet-panel",role:"dialog","aria-modal":"true","aria-labelledby":"sheet-title"},
+      h("div",{class:"sheet-head"},h("h2",{id:"sheet-title",text:g.name}),close),
+      g.note?h("p",{class:"note",text:g.note}):null,
+      pixPanel(cfg,{amount:g.price||0,idp:"sheet"}),
+      h("p",{class:"hint",text:"Confira o nome do recebedor no app antes de confirmar. Depois de pagar, avise "+(name||"quem faz aniversário")+" para marcar o presente na lista."})));
+  sheetEl.hidden=false;document.body.classList.add("noscroll");close.focus();
+}
+function closeSheet(){
+  sheetEl.hidden=true;sheetEl.replaceChildren();document.body.classList.remove("noscroll");
+  if(lastFocus&&lastFocus.focus) lastFocus.focus();
+}
+document.addEventListener("keydown",function(e){
+  if(sheetEl.hidden) return;
+  if(e.key==="Escape"){closeSheet();return}
+  if(e.key==="Tab"){
+    var f=[].slice.call(sheetEl.querySelectorAll("button,input,textarea,a[href]")).filter(function(x){return !x.disabled});
+    if(!f.length) return;
+    var first=f[0],last=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  }
+});
+
+/* Seções da página */
+function hero(s){
+  var d=daysLeft(s.date);
+  return h("header",{class:"hero"},
+    h("div",{class:"hero-main"},
+      h("p",{class:"eyebrow",text:"Whylist · lista de presentes"}),
+      h("h1",null,"Aniversário de ",h("span",{class:"who",text:s.honoree||"Aniversariante"})),
+      s.date&&parseDate(s.date)?h("p",{class:"when",text:fmtDate(s.date)}):null,
+      s.message?h("p",{class:"msg",text:s.message}):null),
+    d!==null?h("div",{class:"count"},
+      h("strong",{class:"big",text:d===0?"Hoje":String(d)}),
+      h("span",{text:d===0?"é dia de festa":(d===1?"dia para o aniversário":"dias para o aniversário")})):null);
+}
+function pixSection(s,cfg){
+  var sec=h("section",{class:"pix-card","aria-labelledby":"pix-h"});
+  var hasKey=!!(s.pix&&String(s.pix.key||"").trim());
+  if(cfg.ok){
+    sec.append(h("h2",{id:"pix-h",text:"Prefere enviar um valor livre?"}),
+      h("p",{class:"sub",text:"Pix direto para "+cfg.name+". Escolha o valor, escaneie o QR code ou copie o código."}),
+      pixPanel(cfg,{amount:0,idp:"free",chips:[20,50,100]}));
+  }else if(!hasKey&&isAdmin){
+    sec.append(h("h2",{id:"pix-h",text:"Configure o Pix para receber"}),
+      h("p",{class:"sub",text:"Informe sua chave Pix e o nome que aparece no seu banco. A página gera o QR code e o Pix copia e cola de cada presente."}),
+      h("div",{class:"btn-row"},h("button",{class:"btn pix",type:"button",onclick:function(){startEdit(true)}},"Configurar Pix")));
+  }else{
+    sec.append(h("h2",{id:"pix-h",text:"Pix"}),
+      h("p",{class:"sub",text:hasKey?cfg.msg:"O Pix desta lista ainda não foi configurado. Volte em breve."}));
+  }
+  return sec;
+}
+function giftCard(g,s,cfg){
+  var href=safeUrl(g.link),acts=h("div",{class:"gift-actions"});
+  if(g.given) acts.append(h("span",{class:"pill good"},icon("check"),"Já ganhou"));
+  else if(cfg.ok) acts.append(h("button",{class:"btn pix",type:"button",onclick:function(){openSheet(g,cfg,s.honoree)}},"Presentear via Pix"));
+  else acts.append(h("span",{class:"pill muted",text:"Pix ainda não configurado"}));
+  if(href) acts.append(h("a",{class:"link",href:href,target:"_blank",rel:"noopener noreferrer"},"Ver produto",icon("ext")));
+  return h("article",{class:"gift"+(g.given?" is-given":"")},
+    mediaEl(g),
+    h("div",{class:"gift-top"},h("h3",{text:g.name}),h("span",{class:"price",text:g.price>0?BRL.format(g.price):"Valor livre"})),
+    g.note?h("p",{class:"note",text:g.note}):null,
+    isAdmin&&g.ex?h("span",{class:"pill warn",text:"Exemplo"}):null,
+    acts);
+}
+function field(label,id,control,hint,cls){
+  return h("div",{class:"field"+(cls?" "+cls:"")},h("label",{for:id,text:label}),control,hint?h("p",{class:"hint",text:hint}):null);
+}
+function txt(id,val,onin,attrs){
+  var a={id:id,type:"text",value:val||"",autocomplete:"off"};
+  for(var k in (attrs||{})) a[k]=attrs[k];
+  var el=h("input",a);
+  el.addEventListener("input",function(){onin(el.value);setDirty()});
+  return el;
+}
+function giftEditCard(g){
+  var id=g.id;
+  return h("article",{class:"gift"},
+    field("Nome do presente","n-"+id,txt("n-"+id,g.name,function(v){g.name=v},{maxlength:80})),
+    h("div",{class:"row2"},
+      field("Valor (R$)","p-"+id,txt("p-"+id,g.price>0?String(g.price).replace(".",","):"",function(v){g._pt=v},{inputmode:"decimal",placeholder:"Valor livre"})),
+      field("Link (opcional)","l-"+id,txt("l-"+id,g.link||"",function(v){g.link=v},{inputmode:"url",placeholder:"https://"}))),
+    field("Observação (opcional)","o-"+id,txt("o-"+id,g.note||"",function(v){g.note=v},{maxlength:140})),
+    h("div",{class:"field"},h("span",{class:"label",text:"Imagem (opcional)"}),
+      imagePicker("img-"+id,function(){return g.img||null},function(v){if(v) g.img=v;else delete g.img;setDirty()})),
+    g.ex?h("span",{class:"pill warn",text:"Exemplo"}):null,
+    h("div",{class:"gift-actions"},
+      h("label",{class:"check"},h("input",{type:"checkbox",id:"c-"+id,checked:g.given,onchange:function(e){g.given=e.target.checked;setDirty()}}),"Já foi presenteado"),
+      h("button",{class:"btn ghost danger small",type:"button",onclick:function(){
+        draft.gifts=draft.gifts.filter(function(x){return x.id!==id});
+        setDirty();render();toast("Presente removido. Salve para publicar.");
+      }},icon("trash"),"Remover")));
+}
+function addForm(){
+  var n=h("input",{id:"add-name",type:"text",maxlength:80,placeholder:"Ex.: Jogo de toalhas",autocomplete:"off"});
+  var p=h("input",{id:"add-price",type:"text",inputmode:"decimal",placeholder:"Valor livre",autocomplete:"off"});
+  var o=h("input",{id:"add-note",type:"text",maxlength:140,placeholder:"Cor, tamanho, loja…",autocomplete:"off"});
+  var l=h("input",{id:"add-link",type:"text",inputmode:"url",placeholder:"https://",autocomplete:"off"});
+  var e=h("p",{class:"hint err",role:"status"});
+  var pending=null;
+  function add(){
+    var name=n.value.trim();
+    if(!name){e.textContent="Dê um nome ao presente.";n.focus();return}
+    var price=parseBRL(p.value);
+    if(price!==null&&(isNaN(price)||price<0||price>999999.99)){e.textContent="Valor inválido. Use algo como 120,50.";p.focus();return}
+    var link=safeUrl(l.value);
+    if(link===null){e.textContent="Link inválido. Use um endereço http ou https.";l.focus();return}
+    var ng={id:uid(),name:name,price:price||0,note:o.value.trim(),link:link,given:false};
+    if(pending) ng.img=pending;
+    draft.gifts.unshift(ng);
+    setDirty();render();
+    var nn=$("#add-name");if(nn) nn.focus();
+    toast("Adicionado: "+name);
+  }
+  return h("form",{class:"add",novalidate:true,onsubmit:function(ev){ev.preventDefault();add()}},
+    h("h3",{text:"Adicionar presente"}),
+    h("div",{class:"form-grid"},
+      field("Nome do presente","add-name",n,null,"wide"),
+      field("Valor (R$)","add-price",p,"Deixe em branco para valor livre."),
+      field("Link (opcional)","add-link",l),
+      field("Observação (opcional)","add-note",o,null,"wide"),
+      h("div",{class:"field wide"},h("span",{class:"label",text:"Imagem (opcional)"}),
+        imagePicker("add-img",function(){return pending},function(v){pending=v}))),
+    e,
+    h("div",{class:"btn-row"},h("button",{class:"btn primary",type:"submit"},icon("plus"),"Adicionar à lista")));
+}
+function giftsSection(s,cfg){
+  var total=s.gifts.length,given=s.gifts.filter(function(g){return g.given}).length;
+  var sec=h("section",{"aria-labelledby":"gifts-h",id:"gifts-wrap"});
+  sec.append(h("div",{class:"sec-head"},h("h2",{id:"gifts-h",text:"Presentes"}),total?h("p",{class:"prog-text",text:given+" de "+total+" já escolhidos"}):null));
+  if(total) sec.append(h("div",{class:"prog","aria-hidden":"true"},h("span",{style:{width:Math.round(given/total*100)+"%"}})));
+  if(editing){
+    sec.append(addForm());
+    var ex=s.gifts.filter(function(g){return g.ex}).length;
+    if(ex) sec.append(h("div",{class:"banner"},h("span",{text:ex+(ex===1?" presente de exemplo na lista.":" presentes de exemplo na lista.")}),
+      h("button",{class:"btn ghost small",type:"button",onclick:function(){
+        draft.gifts=draft.gifts.filter(function(g){return !g.ex});setDirty();render();toast("Exemplos removidos. Salve para publicar.");
+      }},icon("trash"),"Remover exemplos")));
+  }
+  if(!total) sec.append(h("div",{class:"empty",text:editing?"Nenhum presente ainda. Use o formulário acima para adicionar o primeiro.":"A lista ainda está vazia. Volte em breve."}));
+  else sec.append(h("div",{class:"grid"},s.gifts.map(function(g){return editing?giftEditCard(g):giftCard(g,s,cfg)})));
+  return sec;
+}
+function settingsPanel(s){
+  var pix=s.pix;
+  var typeSel=h("select",{id:"f-type"},TYPES.map(function(t){return h("option",{value:t[0],selected:pix.type===t[0]},t[1])}));
+  typeSel.addEventListener("change",function(){pix.type=typeSel.value;setDirty();refreshPixStatus()});
+  var msg=h("textarea",{id:"f-message",class:"in",rows:3,maxlength:280},s.message||"");
+  msg.addEventListener("input",function(){s.message=msg.value;setDirty()});
+  var date=txt("f-date",s.date,function(v){s.date=v},{type:"date"});
+  return h("details",{class:"panel",open:true},
+    h("summary",{text:"Aniversariante e Pix"}),
+    h("div",{class:"form-grid"},
+      field("Nome de quem faz aniversário","f-honoree",txt("f-honoree",s.honoree,function(v){s.honoree=v;refreshPixStatus()},{maxlength:40})),
+      field("Data do aniversário","f-date",date,"Usada para a contagem regressiva."),
+      field("Mensagem para os convidados (opcional)","f-message",msg,null,"wide"),
+      field("Tipo de chave Pix","f-type",typeSel),
+      field("Chave Pix","f-key",txt("f-key",pix.key,function(v){pix.key=v;refreshPixStatus()}),null),
+      field("Nome do recebedor","f-pname",txt("f-pname",pix.name,function(v){pix.name=v;refreshPixStatus()},{maxlength:25}),"Como aparece no seu banco, até 25 letras. Se ficar vazio, usa o nome acima."),
+      field("Cidade (opcional)","f-city",txt("f-city",pix.city,function(v){pix.city=v;refreshPixStatus()},{maxlength:15}),"Até 15 letras.")),
+    importBlock(),
+    h("div",{class:"pix-test"},
+      h("div",{class:"qr small",id:"test-qr",hidden:true}),
+      h("div",{class:"txt"},
+        h("p",{class:"hint",id:"pix-status"}),
+        h("p",{class:"hint",text:"Teste: escaneie com o app do seu banco. O nome do recebedor deve aparecer antes de você confirmar. Não precisa pagar."}))));
+}
+function refreshPixStatus(){
+  var s=draft,st=$("#pix-status"),box=$("#test-qr");
+  if(!st||!s) return;
+  var ph={cpf:"000.000.000-00",cnpj:"00.000.000/0000-00",phone:"(61) 99999-0000",email:"voce@exemplo.com.br",random:"123e4567-e89b-12d3-a456-426614174000"};
+  $("#f-key").placeholder=ph[s.pix.type]||"";
+  box.replaceChildren();box.hidden=true;
+  if(!String(s.pix.key||"").trim()){st.textContent="Informe a chave Pix para gerar os QR codes.";st.className="hint";return}
+  var c=pixConfig(s.pix,s.honoree);
+  if(!c.ok){st.textContent=c.msg;st.className="hint err";return}
+  st.textContent="Chave válida: "+c.key+". Recebedor: "+c.name+", "+c.city+".";st.className="hint ok";
+  var svg=qrSvg(buildPix(c,0));
+  if(svg){box.append(svg);box.hidden=false}
+}
+function adminBar(s){
+  if(!editing){
+    var hasEx=s.gifts.some(function(g){return g.ex});
+    return h("div",{class:"bar"},h("div",{class:"bar-in"},
+      h("p",{class:"bar-msg",text:hasEx?"Você gerencia esta lista. Os presentes marcados como exemplo são só ilustração.":"Você gerencia esta lista."}),
+      h("button",{class:"btn primary",type:"button",onclick:function(){startEdit(false)}},icon("edit"),"Editar lista")));
+  }
+  return h("div",{class:"bar editing"},h("div",{class:"bar-in"},
+    h("p",{class:"bar-msg",id:"bar-status",text:dirty?"Alterações não salvas":"Modo edição"}),
+    h("div",{class:"bar-btns"},
+      h("button",{class:"btn ghost",id:"discard-btn",type:"button",onclick:discard},"Descartar"),
+      h("button",{class:"btn primary",id:"save-btn",type:"button",onclick:save,disabled:saving},saving?"Salvando…":"Salvar e publicar"))));
+}
+function render(){
+  var s=cur(),cfg=pixConfig(s.pix,s.honoree),app=$("#app");
+  var parts=[
+    isAdmin?adminBar(s):null,
+    hero(s),
+    editing?settingsPanel(s):pixSection(s,cfg),
+    giftsSection(s,cfg),
+    h("footer",{class:"foot",text:"O pagamento é feito direto no app do seu banco, para a chave Pix de quem faz aniversário. Esta página não confirma pagamentos."})
+  ].filter(Boolean);
+  app.replaceChildren.apply(app,parts);
+  if(editing) refreshPixStatus();
+}
+
+/* Edição e publicação */
+function startEdit(focusPix){
+  draft=JSON.parse(JSON.stringify(saved));editing=true;dirty=false;armed=false;
+  render();
+  window.scrollTo(0,0);
+  if(focusPix){var k=$("#f-key");if(k) k.focus()}
+}
+function discard(){
+  if(dirty&&!armed){
+    armed=true;
+    var b=$("#discard-btn");if(b) b.textContent="Descartar mesmo?";
+    setTimeout(function(){armed=false;var b2=$("#discard-btn");if(b2) b2.textContent="Descartar"},4000);
+    return;
+  }
+  armed=false;editing=false;draft=null;dirty=false;render();
+}
+function finalize(){
+  var d=JSON.parse(JSON.stringify(draft));
+  d.honoree=d.honoree.trim();d.message=d.message.trim();
+  d.pix.key=d.pix.key.trim();d.pix.name=d.pix.name.trim();d.pix.city=d.pix.city.trim();
+  if(d.pix.key){var c=pixConfig(d.pix,d.honoree);if(!c.ok) return {error:c.msg,focus:"#f-key"}}
+  for(var i=0;i<d.gifts.length;i++){
+    var g=d.gifts[i];
+    g.name=String(g.name||"").trim();
+    if(!g.name) return {error:"Todo presente precisa de um nome.",focus:"#n-"+g.id};
+    if(g._pt!==undefined){
+      var n=parseBRL(g._pt);
+      if(n!==null&&(isNaN(n)||n<0||n>999999.99)) return {error:"Valor inválido em "+g.name+".",focus:"#p-"+g.id};
+      g.price=n||0;delete g._pt;
+    }
+    var u=safeUrl(g.link);
+    if(u===null) return {error:"Link inválido em "+g.name+".",focus:"#l-"+g.id};
+    g.link=u;g.note=String(g.note||"").trim();g.given=!!g.given;
+    if(g.img&&!imgOf(g)) delete g.img;
+  }
+  return {data:d};
+}
+function buildDoc(d){
+  var json=JSON.stringify(d).replace(/</g,"\\u003c");
+  return "<!doctype html><html><head><meta charset=utf8><meta name=viewport content=\"width=device-width,initial-scale=1,viewport-fit=cover\"><style>"+RESET+"</style></head><body>"+
+    "<title>Whylist</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n"+
+    "<link rel=\"stylesheet\" href=\""+FONTS+"\">\n"+
+    "<style id=\"appstyle\">"+$("#appstyle").textContent+"</style>\n"+
+    MARKUP+"\n"+
+    "<script type=\"application/json\" id=\"state\">"+json+"<\/script>\n"+
+    "<script src=\""+LIB+"\"><\/script>\n"+
+    "<script src=\""+LIB2+"\"><\/script>\n"+
+    "<script id=\"appscript\">"+$("#appscript").textContent+"<\/script>"+
+    "</body></html>";
+}
+function save(){
+  if(saving) return;
+  if(!art){toast("Salvar não está disponível nesta visualização.");return}
+  var r=finalize();
+  if(r.error){toast(r.error);var f=$(r.focus);if(f) f.focus();return}
+  saving=true;
+  var b=$("#save-btn");if(b){b.disabled=true;b.textContent="Salvando…"}
+  art.publish(buildDoc(r.data)).then(function(){toast("Publicado")}).catch(function(e){
+    saving=false;
+    var b2=$("#save-btn");if(b2){b2.disabled=false;b2.textContent="Salvar e publicar"}
+    var c=e&&e.code;
+    if(c==="conflict") toast("Outra versão foi publicada antes. A página vai recarregar.");
+    else if(c==="not_writer"||c==="not_granted"||c==="consent_required"||c==="capability_disabled"||c==="capability_removed"||c==="not_declared"){art=null;toast("Você não tem permissão para salvar esta lista.")}
+    else if(c==="rate_limited") toast("Muitas publicações seguidas. Espere um instante e tente de novo.");
+    else if(c==="too_large") toast("A lista ficou grande demais para salvar.");
+    else toast("Não foi possível salvar. Tente de novo.");
+  });
+}
+
+render();
+(async function(){
+  try{
+    if(window.claude&&typeof window.claude.use==="function"){
+      var u=await window.claude.use("user");
+      isAdmin=u?await u.canEdit():false;
+      art=await window.claude.use("artifact");
+      try{assetsApi=isAdmin?await window.claude.use("assets"):null}catch(e2){assetsApi=null}
+    }
+  }catch(e){}
+  if(isAdmin&&!editing) render();
+})();
+})();
+</script>
