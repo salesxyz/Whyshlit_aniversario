@@ -1,0 +1,88 @@
+{
+  "v": 1,
+  "siteTitle": "Whylist",
+  "theme": "system",
+  "honoree": "",
+  "date": "",
+  "message": "",
+  "pix": {
+    "type": "cpf",
+    "key": "",
+    "name": "",
+    "city": ""
+  },
+  "gifts": [
+    {
+      "id": "ex1",
+      "name": "Fone de ouvido sem fio",
+      "price": 280,
+      "note": "Cor preta, com cancelamento de ruído.",
+      "link": "",
+      "img": {
+        "t": "icon",
+        "k": "tech"
+      },
+      "ex": true
+    },
+    {
+      "id": "ex2",
+      "name": "Jogo de panelas antiaderentes",
+      "price": 350,
+      "note": "Conjunto com 5 peças.",
+      "link": "",
+      "img": {
+        "t": "icon",
+        "k": "kitchen"
+      },
+      "ex": true
+    },
+    {
+      "id": "ex3",
+      "name": "Jogo de cama queen",
+      "price": 220,
+      "note": "Algodão, tons claros.",
+      "link": "",
+      "img": {
+        "t": "icon",
+        "k": "home"
+      },
+      "ex": true
+    },
+    {
+      "id": "ex4",
+      "name": "Cafeteira italiana",
+      "price": 95,
+      "note": "Para 6 xícaras.",
+      "link": "",
+      "img": {
+        "t": "icon",
+        "k": "kitchen"
+      },
+      "ex": true
+    },
+    {
+      "id": "ex5",
+      "name": "Jantar para dois",
+      "price": 180,
+      "note": "Vale em restaurante a combinar.",
+      "link": "",
+      "img": {
+        "t": "icon",
+        "k": "food"
+      },
+      "ex": true
+    },
+    {
+      "id": "ex6",
+      "name": "Contribuição para a viagem",
+      "price": 0,
+      "note": "Qualquer valor ajuda.",
+      "link": "",
+      "img": {
+        "t": "icon",
+        "k": "cash"
+      },
+      "ex": true
+    }
+  ]
+}

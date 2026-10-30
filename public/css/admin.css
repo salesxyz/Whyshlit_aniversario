@@ -1,0 +1,39 @@
+/* Painel do administrador: barra, formulários, editor de presentes e seletor de imagem. */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding-block:10px}
+.bar-msg{font-size:.9rem;color:var(--muted);flex:1 1 220px;min-width:0}
+.bar.editing .bar-msg{color:var(--ink);font-weight:600}
+.bar-btns{display:flex;gap:8px;flex-wrap:wrap}
+.picker{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tab{min-height:40px;padding:8px 14px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--muted);font:600 .9rem var(--font-body);cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.pick-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.thumb{width:96px;aspect-ratio:16/10;border-radius:8px;object-fit:cover;border:1px solid var(--line)}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px}
+.icon-opt{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:64px;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:500 .72rem var(--font-body);cursor:pointer}
+.icon-opt svg{width:24px;height:24px}
+.icon-opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.settings-stack{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 20px 20px}
+.panel summary{cursor:pointer;font:700 1.15rem var(--font-display);padding-block:14px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px 16px}
+.form-grid .wide{grid-column:1/-1}
+.import{display:flex;flex-direction:column;gap:12px;margin-top:20px;padding:16px;border:1px dashed var(--line);border-radius:12px;min-width:0}
+.pix-test{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.pix-test .txt{flex:1 1 220px;display:flex;flex-direction:column;gap:6px;min-width:0;overflow-wrap:anywhere}
+.add{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px}
+.banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px 16px;font-size:.9rem;font-weight:500}
+
+/* Primeiros passos */
+.checklist{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.steps li{display:flex;align-items:center;gap:10px;min-height:32px}
+.steps li.done{color:var(--muted)}
+.step-mark{display:inline-flex;color:var(--muted)}
+.steps li.done .step-mark{color:var(--good)}
+
+/* Reordenar presentes */
+.move-group{display:flex;gap:6px}
+.move-group .btn{width:36px}

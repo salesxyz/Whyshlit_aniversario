@@ -1,0 +1,27 @@
+/* Tokens de cor, tipografia e temas (claro, escuro e automático). Paleta: Grafite e dourado. */
+:root{
+  --bg:#F1F0EC; --surface:#FFFFFF; --ink:#1E1E1C; --muted:#5E5C55; --line:#DEDCD4;
+  --accent:#9A5F00; --accent-soft:#F6E7C8; --on-accent:#FFFFFF;
+  --pix:#0C7C73; --on-pix:#FFFFFF; --pix-soft:#DDF3F0;
+  --good:#1B7F52; --good-soft:#DDF2E7; --warn:#8A5200; --warn-soft:#FFEBC7;
+  --danger:#B4232C; --focus:#2B59FF;
+  --font-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --font-body:"Figtree","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161614; --surface:#20201D; --ink:#F0EFE9; --muted:#B0AEA4; --line:#3A3935;
+    --accent:#F0B84A; --accent-soft:#3A3018; --on-accent:#161614;
+    --pix:#4FDCCB; --on-pix:#0E2B28; --pix-soft:#17393A;
+    --good:#56D79A; --good-soft:#17392B; --warn:#F2BE63; --warn-soft:#3B2F14;
+    --danger:#FF8C92; --focus:#8EA6FF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161614; --surface:#20201D; --ink:#F0EFE9; --muted:#B0AEA4; --line:#3A3935;
+  --accent:#F0B84A; --accent-soft:#3A3018; --on-accent:#161614;
+  --pix:#4FDCCB; --on-pix:#0E2B28; --pix-soft:#17393A;
+  --good:#56D79A; --good-soft:#17392B; --warn:#F2BE63; --warn-soft:#3B2F14;
+  --danger:#FF8C92; --focus:#8EA6FF; color-scheme:dark;
+}

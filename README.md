@@ -14,10 +14,29 @@ npm start
 
 Abra `http://localhost:3000`. O arquivo `.env` é lido pelo comando de inicialização e está excluído do Git. Sem Supabase, o servidor local salva a lista em `data/state.json`; imagens e pagamentos Stripe exigem as configurações descritas abaixo. O modo local não deve ser usado como armazenamento de produção.
 
+## Estrutura do projeto
+
+```
+server.js            servidor local (arquivos de public/ + API)
+api/[...path].js     entrada da API na Vercel
+src/server/          backend: config, http, auth, validation, routes, stores/, services/
+public/              frontend (módulos ES nativos, sem build)
+  index.html, default-state.json
+  css/               tokens, base, components, page, admin
+  js/lib/            utilitários: dom, pix, qr, imagens, formatação
+  js/state/          store, ações, normalização, localStorage
+  js/api/            cliente da API
+  js/ui/             telas públicas (hero, Pix, presentes, pagamento)
+  js/admin/          login, barra, checklist, edição de presentes e Pix
+tests/               node --test (Pix, validação, estado, API)
+```
+
+Rode os testes com `npm test`. O frontend usa módulos ES: sem backend, sirva a pasta `public/` por HTTP (abrir o `index.html` direto via `file://` não funciona).
+
 ## Publicar na Vercel
 
 1. Crie um projeto Supabase e execute [`supabase/schema.sql`](./supabase/schema.sql) no SQL Editor. Isso cria a tabela de estado e o bucket público de imagens `whylist-assets`. Se você executou uma versão anterior do esquema, o script também remove a antiga função que marcava presentes automaticamente.
-2. Importe este projeto na Vercel. O arquivo `api/[...path].js` atende as rotas da API; o conteúdo estático é servido diretamente pela Vercel. Não envie nem versione o arquivo `.env`; configure os valores em **Settings > Environment Variables** no projeto Vercel.
+2. Importe este projeto na Vercel. O arquivo `api/[...path].js` atende as rotas da API; o conteúdo estático da pasta `public/` (definida em `vercel.json`) é servido diretamente pela Vercel. Não envie nem versione o arquivo `.env`; configure os valores em **Settings > Environment Variables** no projeto Vercel.
 3. Configure as variáveis de ambiente no projeto Vercel (ou preencha o `.env` apenas para execução local):
    - `ADMIN_PASSWORD`: senha de administrador com pelo menos 12 caracteres.
    - `SESSION_SECRET`: segredo aleatório longo para assinar cookies de sessão. Se omitido, é derivado da senha de administrador; prefira defini-lo.
@@ -42,9 +61,10 @@ O painel administrativo usa um cookie assinado, compatível com funções server
 - Clique em **Entrar como administrador**, informe `ADMIN_PASSWORD` e escolha **Editar lista**.
 - Preencha nome, data, mensagem e dados Pix; adicione, edite ou remova presentes e salve. Com Supabase, as alterações ficam disponíveis aos visitantes.
 - Fotos são reduzidas no navegador e enviadas como JPEG ao bucket Supabase; o limite é 1 MB por imagem. Ícones continuam disponíveis.
+- O painel mostra um checklist do que falta publicar, permite reordenar presentes, visualizar como visitante e salvar com Ctrl+S; avisa se houver alterações não salvas.
 - Sem backend, as alterações ficam apenas no navegador. **Baixar configuração** exporta o JSON; é necessário publicá-lo novamente para atualizar um site estático.
 
-`index.html` contém os dados iniciais usados na primeira inicialização. Remova os itens de exemplo e substitua os dados de demonstração antes de divulgar a lista. A página não armazena dados de cartão, não confirma pagamentos diretos à chave Pix e não substitui a conferência financeira no painel Stripe.
+`public/default-state.json` contém os dados iniciais usados na primeira inicialização. Remova os itens de exemplo e substitua os dados de demonstração antes de divulgar a lista. A página não armazena dados de cartão, não confirma pagamentos diretos à chave Pix e não substitui a conferência financeira no painel Stripe.
 
 ## API
 
