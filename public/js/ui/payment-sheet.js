@@ -1,4 +1,4 @@
-// Janela "Contribuir com Pix" de um presente.
+// Janela de contribuição de um presente.
 
 import { store } from "../state/store.js";
 import { h } from "../lib/dom.js";

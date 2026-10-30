@@ -42,3 +42,38 @@ textarea.in{resize:vertical}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 .sheet-body{display:flex;flex-direction:column;gap:14px;min-width:0}
 .icon-btn:disabled{opacity:.4}
+
+.btn,.chip,.link-button,.link{transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease,border-color .18s ease,color .18s ease,opacity .18s ease}
+.btn:active:not(:disabled),.chip:active{transform:scale(.98)}
+.btn.pix{box-shadow:0 3px 10px color-mix(in srgb,var(--pix) 18%,transparent)}
+.btn.pix:hover:not(:disabled){box-shadow:0 7px 18px color-mix(in srgb,var(--pix) 28%,transparent);transform:translateY(-1px)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+.btn.ghost:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+input[type=text],input[type=date],select,textarea.in,.code{transition:border-color .18s ease,box-shadow .18s ease}
+input[type=text]:focus, input[type=date]:focus, select:focus, textarea.in:focus, .code:focus{
+  border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 16%,transparent);outline:none
+}
+#sheet:not([hidden]) .sheet-back{animation:sheet-fade .2s ease both}
+#sheet:not([hidden]) .sheet-panel{animation:sheet-rise .28s cubic-bezier(.2,.7,.25,1) both}
+@keyframes sheet-fade{from{opacity:0}to{opacity:1}}
+@keyframes sheet-rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+@media (max-width:560px){
+  .btn-row{gap:8px}
+  .btn-row>.btn{flex:1 1 100%;min-width:0}
+  #sheet{padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+  .sheet-panel{width:100%;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));gap:12px}
+  .sheet-head h2{font-size:1.2rem}
+  .sheet-body{gap:12px}
+  #toast{bottom:calc(14px + env(safe-area-inset-bottom,0px));font-size:.85rem}
+}
+
+@media (max-width:360px){
+  .sheet-panel{padding-left:14px;padding-right:14px}
+  .btn{padding:9px 12px;font-size:.9rem}
+  .btn.small{padding:6px 10px}
+}

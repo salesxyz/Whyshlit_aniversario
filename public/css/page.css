@@ -19,7 +19,7 @@ h1{font:800 clamp(2.4rem,9vw,4.6rem)/1 var(--font-display);letter-spacing:-.03em
 .qr svg{display:block;width:100%;height:100%}
 .qr.small{max-width:150px}
 .qr .hint{padding:12px;color:#444;text-align:center}
-@media (max-width:560px){.pix-panel{grid-template-columns:minmax(0,1fr)}.qr{justify-self:center}}
+@media (max-width:680px){.pix-panel{grid-template-columns:minmax(0,1fr);gap:18px}.qr{justify-self:center}}
 .sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
 #gifts-wrap{display:flex;flex-direction:column;gap:16px;min-width:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px}
@@ -38,3 +38,104 @@ h1{font:800 clamp(2.4rem,9vw,4.6rem)/1 var(--font-display);letter-spacing:-.03em
 .media-icon svg{width:40%;height:40%;max-height:84px}
 .foot-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px}
 .foot-row .link-button{font-size:.85rem;color:var(--muted)}
+
+.welcome{display:grid;min-height:min(78vh,760px);place-items:center;padding-block:clamp(24px,8vh,72px)}
+.welcome-card{width:min(100%,760px);padding:clamp(24px,6vw,52px);border:1px solid var(--line);border-radius:28px;background:var(--surface);box-shadow:0 20px 60px rgba(30,30,28,.08);text-align:center}
+.welcome-card>.eyebrow{justify-content:center;margin-bottom:20px}
+.welcome-card h1{max-width:15ch;margin-inline:auto;font-size:clamp(2.2rem,7vw,4rem);line-height:1.04}
+.welcome-intro{max-width:50ch;margin:16px auto 30px;color:var(--muted)}
+.welcome-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;text-align:left}
+.welcome-option{display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0;padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--bg)}
+.welcome-option h2{font-size:1.25rem}
+.welcome-option .hint{flex:1}
+.welcome-option .btn{width:100%;margin-top:4px}
+.welcome-icon{display:grid;width:44px;height:44px;place-items:center;border-radius:13px}
+.welcome-icon svg{width:22px;height:22px}
+.visitor-icon{background:var(--pix-soft);color:var(--pix)}
+.admin-icon{background:var(--accent-soft);color:var(--accent)}
+.welcome-option{transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .welcome-option:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 12px 28px rgba(30,30,28,.08)}
+}
+
+#app>.hero{animation:fade-up .65s cubic-bezier(.2,.7,.25,1) both}
+#app>.pix-card,#app>.checklist{animation:fade-up .65s .1s cubic-bezier(.2,.7,.25,1) both}
+#app>#gifts-wrap{animation:fade-up .65s .18s cubic-bezier(.2,.7,.25,1) both}
+#app>.foot-row{animation:fade-up .65s .24s cubic-bezier(.2,.7,.25,1) both}
+
+.hero{position:relative;isolation:isolate}
+.hero::after{
+  content:"";position:absolute;z-index:-1;top:-36px;right:4%;width:clamp(220px,38vw,400px);aspect-ratio:1;
+  border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent-soft) 82%,transparent),transparent 70%);
+  pointer-events:none;animation:hero-glow 9s ease-in-out infinite alternate
+}
+.hero-main,.count{position:relative}
+.eyebrow{display:inline-flex;align-items:center;gap:9px}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pix);box-shadow:0 0 0 4px var(--pix-soft);animation:status-pulse 3s ease-in-out infinite}
+.count .big{animation:count-arrive .8s .2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes count-arrive{
+  from{opacity:0;transform:translateY(12px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes hero-glow{
+  from{transform:translate3d(0,0,0) scale(.94);opacity:.55}
+  to{transform:translate3d(-14px,12px,0) scale(1.06);opacity:.9}
+}
+@keyframes status-pulse{
+  0%,100%{box-shadow:0 0 0 4px var(--pix-soft)}
+  50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--pix-soft) 45%,transparent)}
+}
+
+.pix-card,.checklist{border-radius:20px;box-shadow:0 8px 28px rgba(30,30,28,.045)}
+.qr{border-radius:14px;box-shadow:0 4px 16px rgba(30,30,28,.06);transition:box-shadow .25s ease,transform .25s ease}
+.gift{border-radius:18px;box-shadow:0 4px 18px rgba(30,30,28,.035);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.gift .media{transition:transform .45s cubic-bezier(.2,.7,.25,1)}
+.gift{animation:gift-arrive .5s ease both}
+.gift:nth-child(2){animation-delay:.06s}
+.gift:nth-child(3){animation-delay:.12s}
+.gift:nth-child(4){animation-delay:.18s}
+.gift:nth-child(5){animation-delay:.24s}
+.gift:nth-child(6){animation-delay:.3s}
+.gift:nth-child(7){animation-delay:.36s}
+.gift:nth-child(8){animation-delay:.42s}
+.gift .media{animation:media-arrive .65s ease both}
+.price{transition:transform .25s ease,box-shadow .25s ease}
+.pix-card h2::before{transition:transform .35s cubic-bezier(.2,.7,.25,1),box-shadow .35s ease}
+@keyframes gift-arrive{from{opacity:0}to{opacity:1}}
+@keyframes media-arrive{from{opacity:.55;filter:saturate(.7)}to{opacity:1;filter:saturate(1)}}
+
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .gift:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 32%,var(--line));box-shadow:0 14px 32px rgba(30,30,28,.1)}
+  .gift:hover .media{transform:scale(1.025)}
+  .gift:hover .price{transform:translateY(-2px);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 18%,transparent)}
+  .qr:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(30,30,28,.1)}
+  .pix-card:hover h2::before{transform:rotate(135deg) scale(1.08);box-shadow:0 0 0 5px var(--pix-soft)}
+}
+
+@media (max-width:560px){
+  .hero{padding-top:24px}
+  .pix-card{padding:clamp(16px,5vw,20px);border-radius:18px}
+  .hero::after{top:-12px;right:0;width:min(80vw,260px)}
+  .hero{gap:18px}
+  .hero-main{flex-basis:100%}
+  .count .big{font-size:clamp(3.2rem,18vw,5rem)}
+  .sec-head{align-items:flex-start}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .gift{padding:16px}
+  .foot-row{align-items:stretch;flex-direction:column;gap:14px}
+  .foot-row .link-button{align-self:flex-start}
+  .welcome{min-height:calc(100dvh - 48px);padding-block:20px}
+  .welcome-card{padding:24px 18px;border-radius:22px}
+  .welcome-options{grid-template-columns:minmax(0,1fr);gap:12px}
+  .welcome-option{padding:18px}
+}
+
+@media (max-width:380px){
+  .hero{gap:16px}
+  .eyebrow{font-size:.7rem;letter-spacing:.1em}
+  h1{font-size:clamp(2rem,10vw,2.4rem)}
+  .gift-top{flex-wrap:wrap;gap:8px}
+  .price{white-space:normal}
+  .gift-actions{gap:10px}
+  .gift-actions>.btn.pix{width:100%}
+}

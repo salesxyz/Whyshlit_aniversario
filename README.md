@@ -12,7 +12,7 @@ Copy-Item .env.example .env
 npm start
 ```
 
-Abra `http://localhost:3000`. O arquivo `.env` é lido pelo comando de inicialização e está excluído do Git. Sem Supabase, o servidor local salva a lista em `data/state.json`; imagens e pagamentos Stripe exigem as configurações descritas abaixo. O modo local não deve ser usado como armazenamento de produção.
+Abra `http://localhost:3000`. O arquivo `.env` é lido pelo comando de inicialização e está excluído do Git. Sem Supabase, o servidor local salva a lista em `data/state.json`; imagens e pagamentos Asaas exigem as configurações descritas abaixo. O modo local não deve ser usado como armazenamento de produção.
 
 ## Estrutura do projeto
 
@@ -43,28 +43,31 @@ Rode os testes com `npm test`. O frontend usa módulos ES: sem backend, sirva a 
    - `SUPABASE_URL`: URL HTTPS do projeto Supabase.
    - `SUPABASE_SERVICE_ROLE_KEY`: chave `service_role`, somente no servidor. Nunca a coloque no frontend nem no controle de versão.
    - `SUPABASE_STORAGE_BUCKET`: opcional; por padrão `whylist-assets`. Se usar outro bucket, crie-o como público, limite uploads a JPEG de até 1 MB e mantenha a escrita restrita ao servidor.
-   - `STRIPE_SECRET_KEY`: chave secreta Stripe do ambiente desejado (`sk_test_...` para testes).
-4. No Stripe, habilite Pix em **Configurações > Formas de pagamento**.
-5. Faça o deploy e teste primeiro com uma chave de teste Stripe. A conta Stripe precisa ser elegível para aceitar Pix em BRL.
+   - `ASAAS_API_KEY`: chave de API Asaas. Use primeiro a chave do Sandbox para testes; mantenha a chave somente no servidor.
+   - `ASAAS_ENVIRONMENT`: `sandbox` (padrão) ou `production`. Em produção, use a chave da conta de produção.
+4. Habilite Pix e cartão de crédito na sua conta Asaas. Esta integração não oferece cartão de débito nem parcelamento.
+5. Teste o checkout no Sandbox antes de trocar `ASAAS_ENVIRONMENT` para `production`.
 
 O painel administrativo usa um cookie assinado, compatível com funções serverless; não depende de sessões guardadas em memória. A lista e as imagens ficam no Supabase. O bucket é público somente para leitura das imagens; os uploads são feitos pela API autenticada do administrador.
 
 ## Sugestões e contribuições
 
 - Os presentes são sugestões; não existe reserva, obrigação de compra nem indicação de que um item foi escolhido.
-- Se a Stripe estiver configurada, **Contribuir com Pix** abre o checkout hospedado. Em presentes com valor definido, o valor é uma sugestão de contribuição; o convidado pode editá-lo. Para itens de valor livre, a contribuição mínima é R$ 0,50.
+- Se a Asaas estiver configurada, **Pagar com Pix ou cartão de crédito** abre o checkout hospedado. Nesta integração, o cartão é pago à vista. Em presentes com valor definido, o valor é uma sugestão de contribuição; o convidado pode editá-lo. Para itens de valor livre, a contribuição mínima é R$ 0,50.
+- No Pix direto, o convidado pode digitar o valor que quiser; se deixar o campo em branco, escolhe o valor no app do banco.
+- O retorno do checkout não confirma o pagamento. Confira a situação diretamente na Asaas; pagamentos Pix diretos não são detectados pelo site.
 - A página não registra o pagamento como status do presente. A lista permanece igual depois do checkout, inclusive se várias pessoas escolherem a mesma sugestão.
-- Sem Stripe configurada, o botão permite gerar um Pix direto para a chave cadastrada ou copiar os dados de pagamento. Transferências diretas não são confirmadas pelo site.
+- Sem Asaas configurada, o botão permite gerar um Pix direto para a chave cadastrada ou copiar os dados de pagamento. Transferências diretas não são confirmadas pelo site.
 
 ## Editar a lista
 
-- Clique em **Entrar como administrador**, informe `ADMIN_PASSWORD` e escolha **Editar lista**.
+- Na página inicial, escolha **Entrar como administrador**, informe `ADMIN_PASSWORD` e escolha **Editar lista**. Visitantes podem acessar a lista sem login.
 - Preencha nome, data, mensagem e dados Pix; adicione, edite ou remova presentes e salve. Com Supabase, as alterações ficam disponíveis aos visitantes.
 - Fotos são reduzidas no navegador e enviadas como JPEG ao bucket Supabase; o limite é 1 MB por imagem. Ícones continuam disponíveis.
 - O painel mostra um checklist do que falta publicar, permite reordenar presentes, visualizar como visitante e salvar com Ctrl+S; avisa se houver alterações não salvas.
 - Sem backend, as alterações ficam apenas no navegador. **Baixar configuração** exporta o JSON; é necessário publicá-lo novamente para atualizar um site estático.
 
-`public/default-state.json` contém os dados iniciais usados na primeira inicialização. Remova os itens de exemplo e substitua os dados de demonstração antes de divulgar a lista. A página não armazena dados de cartão, não confirma pagamentos diretos à chave Pix e não substitui a conferência financeira no painel Stripe.
+`public/default-state.json` contém os dados iniciais usados na primeira inicialização. Remova os itens de exemplo e substitua os dados de demonstração antes de divulgar a lista. A página não armazena dados de cartão, não confirma pagamentos diretos à chave Pix e não substitui a conferência financeira no painel Asaas.
 
 ## API
 
@@ -73,4 +76,4 @@ O painel administrativo usa um cookie assinado, compatível com funções server
 - `POST /api/admin/login` e `POST /api/admin/logout`: sessão administrativa.
 - `PUT /api/admin/state`: salva a lista, protegido por sessão.
 - `POST /api/images` e `GET /api/images/:id`: upload autenticado e leitura pública de imagens.
-- `POST /api/payments/checkout`: cria uma sessão Stripe Pix para um presente ou contribuição.
+- `POST /api/payments/checkout`: cria um checkout Asaas para Pix ou cartão de crédito para um presente ou contribuição.

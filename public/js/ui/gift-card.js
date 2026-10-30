@@ -1,6 +1,6 @@
 // Cartão de um presente na página pública.
 
-import { showsAdminHints } from "../state/store.js";
+import { showsAdminHints, store } from "../state/store.js";
 import { h } from "../lib/dom.js";
 import { BRL, safeUrl } from "../lib/format.js";
 import { giftIcon, icon } from "../lib/icons.js";
@@ -18,7 +18,8 @@ export function giftCard(gift, config) {
   const href = safeUrl(gift.link);
   const actions = h("div", { class: "gift-actions" });
   if (config.ok) {
-    actions.append(h("button", { class: "btn pix", type: "button", onclick: () => openPaymentSheet(gift, config) }, "Contribuir com Pix"));
+    actions.append(h("button", { class: "btn pix", type: "button", onclick: () => openPaymentSheet(gift, config) },
+      store.payments ? "Pagar com Pix ou cartão de crédito" : "Contribuir com Pix"));
   } else {
     actions.append(h("span", { class: "pill muted", text: "Pix ainda não configurado" }));
   }

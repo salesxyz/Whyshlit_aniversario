@@ -1,21 +1,21 @@
 "use strict";
 
-const crypto = require("node:crypto");
 const { HttpError, readJson } = require("../http");
 const { CONTRIBUTION_ID, MAX_PRICE } = require("../validation");
 
 const MIN_AMOUNT = 0.5;
+const CHECKOUT_IMAGE = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lS8AAAAASUVORK5CYII=";
 
-/** Contribuições por Pix pelo checkout hospedado da Stripe. */
+/** Contribuições por Pix ou cartão de crédito pelo checkout hospedado da Asaas. */
 function createPaymentService({ config, store, supabase }) {
   function isEnabled() {
-    return Boolean(config.supabase.enabled && config.stripeSecretKey);
+    return Boolean(config.supabase.enabled && config.asaas.apiKey);
   }
 
   async function createCheckout(req) {
     supabase.assertConfigured();
-    if (!config.stripeSecretKey) {
-      throw new HttpError(503, "Configure STRIPE_SECRET_KEY no ambiente do servidor.");
+    if (!config.asaas.apiKey) {
+      throw new HttpError(503, "Configure ASAAS_API_KEY no ambiente do servidor.");
     }
     const body = await readJson(req, 4096);
     if (!body || typeof body.giftId !== "string") throw new HttpError(400, "Presente inválido.");
@@ -31,34 +31,59 @@ function createPaymentService({ config, store, supabase }) {
     }
 
     const origin = new URL(req.headers.origin).origin;
-    const params = new URLSearchParams();
-    params.set("mode", "payment");
-    params.append("payment_method_types[]", "pix");
-    params.set("line_items[0][price_data][currency]", "brl");
-    params.set("line_items[0][price_data][unit_amount]", String(Math.round(amount * 100)));
-    params.set("line_items[0][price_data][product_data][name]",
-      (gift ? gift.name : "Contribuição para a lista").slice(0, 120));
-    params.set("line_items[0][quantity]", "1");
-    params.set("payment_method_options[pix][expires_after_seconds]", "3600");
-    params.set("success_url", origin + "/?pagamento=confirmado");
-    params.set("cancel_url", origin + "/?pagamento=cancelado");
-
-    const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + config.stripeSecretKey,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Idempotency-Key": crypto.randomUUID()
-      },
-      body: params,
-      signal: AbortSignal.timeout(15000)
-    });
-    const result = await response.json();
-    if (!response.ok || typeof result.url !== "string") {
-      console.error("Falha ao criar Checkout Stripe:", response.status, result.error && result.error.type);
-      throw new HttpError(502, "Não foi possível iniciar o pagamento Pix. Confira se Pix está ativado na conta Stripe.");
+    const name = (gift ? gift.name : "Contribuição para a lista").slice(0, 30);
+    let response;
+    try {
+      response = await fetch(config.asaas.apiUrl + "/checkouts", {
+        method: "POST",
+        headers: {
+          access_token: config.asaas.apiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          billingTypes: ["PIX", "CREDIT_CARD"],
+          chargeTypes: ["DETACHED"],
+          minutesToExpire: 60,
+          callback: {
+            successUrl: origin + "/?pagamento=retorno",
+            cancelUrl: origin + "/?pagamento=cancelado",
+            expiredUrl: origin + "/?pagamento=expirado"
+          },
+          items: [{
+            name,
+            description: (gift ? gift.note || gift.name : "Contribuição para a lista").slice(0, 150),
+            imageBase64: CHECKOUT_IMAGE,
+            quantity: 1,
+            value: amount
+          }]
+        }),
+        signal: AbortSignal.timeout(15000)
+      });
+    } catch {
+      throw new HttpError(502, "Não foi possível conectar à Asaas. Tente novamente.");
     }
-    return { url: result.url };
+
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new HttpError(502, "A Asaas retornou uma resposta inválida.");
+    }
+    if (!result || typeof result !== "object" || Array.isArray(result)) {
+      throw new HttpError(502, "A Asaas retornou uma resposta inválida.");
+    }
+
+    const checkoutLink = typeof result.link === "string"
+      ? result.link
+      : typeof result.id === "string"
+        ? config.asaas.checkoutUrl + encodeURIComponent(result.id)
+        : "";
+    if (!response.ok || !checkoutLink) {
+      const errorCode = result.errors && result.errors[0] && result.errors[0].code;
+      console.error("Falha ao criar Checkout Asaas:", response.status, errorCode || "resposta inválida");
+      throw new HttpError(502, "Não foi possível iniciar o pagamento. Confira a chave e os métodos de pagamento na Asaas.");
+    }
+    return { url: checkoutLink };
   }
 
   return { isEnabled, createCheckout };

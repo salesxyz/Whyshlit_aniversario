@@ -16,11 +16,33 @@ import { hero } from "./ui/hero.js";
 import { pixSection } from "./ui/pix-section.js";
 import { applySiteSettings } from "./ui/site.js";
 import { toast } from "./ui/toast.js";
+import { welcome } from "./ui/welcome.js";
+import { openLogin } from "./admin/login.js";
 
 function render() {
   const state = current();
-  const config = pixConfig(state.pix, state.honoree);
   applySiteSettings(state);
+  if (store.entryMode === "welcome") {
+    $("#admin-bar").replaceChildren();
+    $("#app").replaceChildren(welcome(state, {
+      onVisitor: () => {
+        store.admin = false;
+        store.entryMode = "visitor";
+        notify();
+      },
+      onAdmin: () => {
+        if (store.backend && !store.admin) {
+          openLogin();
+          return;
+        }
+        store.admin = true;
+        store.entryMode = "admin";
+        notify();
+      }
+    }));
+    return;
+  }
+  const config = pixConfig(state.pix, state.honoree);
   refreshAdminBar();
 
   const parts = [hero(state)];
@@ -40,7 +62,8 @@ function handleCheckoutReturn() {
   if (!result) return;
   history.replaceState(null, "", location.pathname + location.hash);
   if (result === "cancelado") toast("Checkout fechado. As sugestões continuam disponíveis.");
-  else if (result === "confirmado") toast("Obrigado pela contribuição!");
+  else if (result === "expirado") toast("O checkout expirou. As sugestões continuam disponíveis.");
+  else if (result === "retorno") toast("Você voltou do checkout. A confirmação do pagamento é feita pela Asaas.");
   else toast("Retorno do checkout não reconhecido.");
 }
 
@@ -113,4 +136,3 @@ async function boot() {
 }
 
 boot();
-

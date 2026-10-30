@@ -6,11 +6,12 @@ export const store = {
   saved: null, // lista publicada (ou salva neste navegador)
   draft: null, // cópia em edição; só existe nos modos "edit" e "preview"
   mode: "view", // "view" (visitante/administrador), "edit" (editando) ou "preview" (visão do convidado)
+  entryMode: "welcome", // "welcome", "visitor" ou "admin"
   dirty: false,
   saving: false,
   admin: false, // pode editar (sessão administrativa, ou site estático em que o dono é quem abre)
   backend: false, // há servidor com API
-  payments: false, // checkout Stripe disponível
+  payments: false, // checkout Asaas disponível
   canUploadImages: false
 };
 

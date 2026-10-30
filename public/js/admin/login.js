@@ -22,6 +22,7 @@ export function openLogin() {
       try {
         await api.login(password.value);
         store.admin = true;
+        store.entryMode = "admin";
         closeSheet();
         notify();
         toast("Sessão administrativa iniciada.");

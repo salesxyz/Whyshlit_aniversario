@@ -16,10 +16,10 @@ export function pixSection(state, config) {
       h("p", {
         class: "sub",
         text: store.payments
-          ? "Contribua com qualquer valor a partir de R$ 0,50 pelo checkout Pix seguro da Stripe."
+          ? "Contribua com qualquer valor a partir de R$ 0,50 e escolha Pix ou cartão de crédito no checkout seguro da Asaas."
           : "Pix direto para " + config.name + ". Escolha o valor, escaneie o QR code ou copie o código."
       }),
-      store.payments ? checkoutPanel(null) : pixPanel(config, { amount: 0, idPrefix: "free", chips: [20, 50, 100] }));
+      store.payments ? checkoutPanel(null) : pixPanel(config, { amount: 0, idPrefix: "free" }));
   } else if (!hasKey && showsAdminHints()) {
     section.append(
       h("h2", { id: "pix-h", text: "Configure o Pix para receber" }),

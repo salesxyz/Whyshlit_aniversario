@@ -6,7 +6,7 @@ const fs = require("node:fs");
 const http = require("node:http");
 const os = require("node:os");
 const path = require("node:path");
-const { loadConfig } = require("../src/server/config");
+const { loadConfig, startupProblem } = require("../src/server/config");
 const { createApi } = require("../src/server");
 const { createStaticHandler } = require("../src/server/static");
 
@@ -39,6 +39,19 @@ async function login(app, password = PASSWORD) {
     body: JSON.stringify({ password })
   });
 }
+
+test("Asaas usa Sandbox por padrão e valida o ambiente", () => {
+  const sandbox = loadConfig({ ADMIN_PASSWORD: PASSWORD });
+  assert.equal(sandbox.asaas.environment, "sandbox");
+  assert.equal(sandbox.asaas.apiUrl, "https://api-sandbox.asaas.com/v3");
+
+  const production = loadConfig({ ADMIN_PASSWORD: PASSWORD, ASAAS_ENVIRONMENT: "production" });
+  assert.equal(production.asaas.apiUrl, "https://api.asaas.com/v3");
+  assert.equal(production.asaas.checkoutUrl, "https://asaas.com/checkoutSession/show?id=");
+
+  const invalid = loadConfig({ ADMIN_PASSWORD: PASSWORD, ASAAS_ENVIRONMENT: "prod" });
+  assert.equal(startupProblem(invalid), "ASAAS_ENVIRONMENT deve ser sandbox ou production.");
+});
 
 test("status e lista pública funcionam sem login", async (t) => {
   const app = await startServer();
@@ -145,6 +158,58 @@ test("com Supabase configurado a imagem redireciona para o bucket público", asy
   assert.equal(response.headers.get("location"), "https://exemplo.supabase.co/storage/v1/object/public/whylist-assets/" + id + ".jpg");
   const status = await json(await fetch(app.base + "/api/status"));
   assert.equal(status.storage, "supabase");
+});
+
+test("checkout Asaas oferece Pix e cartão de crédito", async (t) => {
+  const app = await startServer({
+    SUPABASE_URL: "https://exemplo.supabase.co",
+    SUPABASE_SERVICE_ROLE_KEY: "chave",
+    ASAAS_API_KEY: "asaas_test_key",
+    ASAAS_ENVIRONMENT: "sandbox"
+  });
+  t.after(() => app.close());
+
+  const originalFetch = global.fetch;
+  let asaasRequest;
+  global.fetch = async (input, options) => {
+    const url = String(input);
+    if (url.startsWith("https://exemplo.supabase.co/rest/v1/whylist_state?")) {
+      return new Response(JSON.stringify([{ state: JSON.parse(fs.readFileSync(path.join(__dirname, "..", "public", "default-state.json"), "utf8")) }]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    if (url === "https://api-sandbox.asaas.com/v3/checkouts") {
+      asaasRequest = options;
+      return new Response(JSON.stringify({ link: "https://sandbox.asaas.com/checkoutSession/show?id=test-checkout" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    return originalFetch(input, options);
+  };
+
+  try {
+    const response = await fetch(app.base + "/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: app.base },
+      body: JSON.stringify({ giftId: "ex1", amount: 10 })
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await json(response), { url: "https://sandbox.asaas.com/checkoutSession/show?id=test-checkout" });
+    const payload = JSON.parse(asaasRequest.body);
+    assert.deepEqual(payload.billingTypes, ["PIX", "CREDIT_CARD"]);
+    assert.deepEqual(payload.chargeTypes, ["DETACHED"]);
+    assert.equal(payload.items[0].name, "Fone de ouvido sem fio");
+    assert.equal(payload.items[0].value, 10);
+    assert.match(payload.items[0].imageBase64, /^[A-Za-z0-9+/]+=*$/);
+    assert.equal(payload.callback.successUrl, "http://127.0.0.1:" + new URL(app.base).port + "/?pagamento=retorno");
+    assert.equal(asaasRequest.headers.access_token, "asaas_test_key");
+    const status = await json(await fetch(app.base + "/api/status"));
+    assert.equal(status.payments, true);
+  } finally {
+    global.fetch = originalFetch;
+  }
 });
 
 test("rota desconhecida devolve 404 em JSON", async (t) => {

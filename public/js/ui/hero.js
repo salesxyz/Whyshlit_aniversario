@@ -10,7 +10,7 @@ export function hero(state) {
   return h("header", { class: "hero" },
     h("div", { class: "hero-main" },
       h("p", { class: "eyebrow", text: "Whylist · lista de presentes" }),
-      h("h1", null, "Aniversário de ", h("span", { class: "who", text: state.honoree || "Aniversariante" })),
+      h("h1", null, " Dezoitou do ", h("span", { class: "who", text: state.honoree || "Aniversariante" })),
       state.date && parseDate(state.date) ? h("p", { class: "when", text: formatDate(state.date) }) : null,
       state.message ? h("p", { class: "msg", text: state.message }) : null),
     days !== null

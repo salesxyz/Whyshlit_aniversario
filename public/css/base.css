@@ -21,3 +21,15 @@ h3{font:700 1.1rem/1.25 var(--font-display)}
 .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .link-button{padding:0;border:0;background:none;font:inherit;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}
 .link-button:hover{color:var(--accent)}
+
+@keyframes fade-up{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@media (max-width:560px){
+  body{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-bottom:48px}
+  #app{gap:26px}
+  h2{font-size:clamp(1.25rem,6vw,1.5rem)}
+  .wrap,#app{width:100%;max-width:100%}
+}

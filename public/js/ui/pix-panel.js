@@ -44,14 +44,14 @@ export function copyButton(label, getText, fallbackTarget) {
   }, icon("copy"), label);
 }
 
-/** `options`: { amount, idPrefix, chips } — amount inicial, prefixo dos ids e atalhos de valor. */
+/** `options`: { amount, idPrefix } — valor inicial e prefixo dos ids. */
 export function pixPanel(config, options) {
   const prefix = options.idPrefix;
   const amountInput = h("input", {
     id: prefix + "-amount",
     type: "text",
     inputmode: "decimal",
-    placeholder: "Qualquer valor",
+    placeholder: "Digite o valor que preferir",
     autocomplete: "off",
     value: options.amount ? String(options.amount).replace(".", ",") : ""
   });
@@ -75,21 +75,10 @@ export function pixPanel(config, options) {
   code.addEventListener("focus", () => code.select());
   update();
 
-  const chips = (options.chips || []).map((value) =>
-    h("button", {
-      class: "chip",
-      type: "button",
-      onclick: () => {
-        amountInput.value = String(value);
-        update();
-      }
-    }, BRL.format(value).replace(",00", "")));
-
   return h("div", { class: "pix-panel" },
     qrBox,
     h("div", { class: "pix-info" },
-      h("div", { class: "field" }, h("label", { for: prefix + "-amount", text: "Valor (R$)" }), amountInput),
-      chips.length ? h("div", { class: "chips" }, chips) : null,
+      h("div", { class: "field" }, h("label", { for: prefix + "-amount", text: "Quanto você quer contribuir? (R$)" }), amountInput),
       error,
       summary,
       h("p", { class: "meta" }, "Recebedor: ", h("b", { text: config.name })),
@@ -99,4 +88,3 @@ export function pixPanel(config, options) {
         copyButton("Copiar código", () => code.value, code),
         copyButton("Copiar chave", () => config.key))));
 }
-
