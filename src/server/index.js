@@ -6,6 +6,7 @@ const { createSupabase } = require("./supabase");
 const { createStateStore } = require("./stores");
 const { createImageService } = require("./services/images");
 const { createPaymentService } = require("./services/payments");
+const { createMessageService } = require("./services/messages");
 const { createRoutes, findRoute, SAME_ORIGIN_MESSAGE } = require("./routes");
 const defaultState = require("../../public/default-state.json");
 
@@ -19,7 +20,8 @@ function createApi(config) {
   const store = createStateStore({ config, supabase, defaultState });
   const images = createImageService({ supabase });
   const payments = createPaymentService({ config, store, supabase });
-  const routes = createRoutes({ config, auth, store, images, payments });
+  const messages = createMessageService({ store });
+  const routes = createRoutes({ config, auth, store, images, payments, messages });
 
   async function dispatch(req, res) {
     const url = new URL(req.url, "http://" + (req.headers.host || "localhost"));
@@ -53,9 +55,11 @@ function createApi(config) {
       }
       const status = cause.status || 500;
       if (status >= 500) console.error("Falha ao processar requisição:", cause);
-      sendJson(res, status, { error: status >= 500 ? "Erro interno do servidor." : cause.message }, cause.headers);
+      sendJson(res, status, {
+        error: cause.publicMessage || (status >= 500 ? "Erro interno do servidor." : cause.message)
+      }, cause.headers);
     }
-  };
+  }
 }
 
 module.exports = { createApi };

@@ -1,7 +1,7 @@
 // Constantes compartilhadas pelo frontend.
 
 export const MAX_PRICE = 999999.99;
-export const MIN_CONTRIBUTION = 0.5;
+export const MIN_CONTRIBUTION = 50;
 export const CONTRIBUTION_ID = "__whylist_contribution__";
 export const LOCAL_STORAGE_KEY = "whylist-state-v1";
 

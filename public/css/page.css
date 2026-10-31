@@ -11,6 +11,12 @@ h1{font:800 clamp(2.4rem,9vw,4.6rem)/1 var(--font-display);letter-spacing:-.03em
 .count span{display:block;font-size:.9rem;color:var(--muted);margin-top:6px}
 @media (min-width:760px){.count{text-align:right}}
 .pix-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.guest-message-section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.guest-message-form{display:flex;flex-direction:column;gap:14px;max-width:680px}
+.guest-message-list{display:flex;flex-direction:column;gap:12px}
+.guest-message{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.guest-message-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
+.guest-message-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .pix-card h2{display:flex;align-items:center;gap:10px}
 .pix-card h2::before{content:"";width:12px;height:12px;background:var(--pix);transform:rotate(45deg);border-radius:2px;flex:none}
 .pix-panel{display:grid;grid-template-columns:minmax(0,232px) minmax(0,1fr);gap:22px;align-items:start}
@@ -114,7 +120,7 @@ h1{font:800 clamp(2.4rem,9vw,4.6rem)/1 var(--font-display);letter-spacing:-.03em
 
 @media (max-width:560px){
   .hero{padding-top:24px}
-  .pix-card{padding:clamp(16px,5vw,20px);border-radius:18px}
+  .pix-card,.guest-message-section{padding:clamp(16px,5vw,20px);border-radius:18px}
   .hero::after{top:-12px;right:0;width:min(80vw,260px)}
   .hero{gap:18px}
   .hero-main{flex-basis:100%}

@@ -4,6 +4,7 @@ import { $, h } from "../lib/dom.js";
 import { icon } from "../lib/icons.js";
 import { discardDraft, downloadConfig, logout, save, setMode, startEdit } from "../state/actions.js";
 import { store } from "../state/store.js";
+import { openMessagesInbox } from "./messages.js";
 
 let discardArmed = false;
 let discardTimer;
@@ -40,6 +41,7 @@ function viewBar() {
     h("p", { class: "bar-msg", text: message }),
     h("div", { class: "bar-btns" },
       !store.backend ? h("button", { class: "btn ghost", type: "button", onclick: downloadConfig }, "Baixar configuração") : null,
+      store.backend ? h("button", { class: "btn ghost", type: "button", onclick: openMessagesInbox }, "Mensagens") : null,
       store.backend ? h("button", { class: "btn ghost", type: "button", onclick: logout }, "Sair") : null,
       h("button", { class: "btn primary", type: "button", onclick: () => startEdit() }, icon("edit"), "Editar lista")));
 }

@@ -18,9 +18,20 @@ export function giftCard(gift, config) {
   const href = safeUrl(gift.link);
   const actions = h("div", { class: "gift-actions" });
   if (config.ok) {
-    actions.append(h("button", { class: "btn pix", type: "button", onclick: () => openPaymentSheet(gift, config) },
-      store.payments ? "Pagar com Pix ou cartão de crédito" : "Contribuir com Pix"));
-  } else {
+    actions.append(h("button", {
+      class: "btn pix",
+      type: "button",
+      onclick: () => openPaymentSheet(gift, config, "pix")
+    }, "Contribuir com Pix"));
+  }
+  if (store.payments) {
+    actions.append(h("button", {
+      class: "btn primary",
+      type: "button",
+      onclick: () => openPaymentSheet(gift, config, "card")
+    }, "Pagar com cartão"));
+  }
+  if (!config.ok && !store.payments) {
     actions.append(h("span", { class: "pill muted", text: "Pix ainda não configurado" }));
   }
   if (href) {

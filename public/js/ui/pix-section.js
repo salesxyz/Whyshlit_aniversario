@@ -12,14 +12,9 @@ export function pixSection(state, config) {
 
   if (config.ok) {
     section.append(
-      h("h2", { id: "pix-h", text: "Prefere enviar um valor livre?" }),
-      h("p", {
-        class: "sub",
-        text: store.payments
-          ? "Contribua com qualquer valor a partir de R$ 0,50 e escolha Pix ou cartão de crédito no checkout seguro da Asaas."
-          : "Pix direto para " + config.name + ". Escolha o valor, escaneie o QR code ou copie o código."
-      }),
-      store.payments ? checkoutPanel(null) : pixPanel(config, { amount: 0, idPrefix: "free" }));
+      h("h2", { id: "pix-h", text: "Pix direto" }),
+      h("p", { class: "sub", text: "Escolha o valor do seu mimo." }),
+      pixPanel(config, { amount: 0, idPrefix: "free" }));
   } else if (!hasKey && showsAdminHints()) {
     section.append(
       h("h2", { id: "pix-h", text: "Configure o Pix para receber" }),
@@ -30,6 +25,11 @@ export function pixSection(state, config) {
     section.append(
       h("h2", { id: "pix-h", text: "Pix" }),
       h("p", { class: "sub", text: hasKey ? config.msg : "O Pix desta lista ainda não foi configurado. Volte em breve." }));
+  }
+  if (store.payments) {
+    section.append(
+      h("h2", { id: "card-h", text: "Pagar com cartão de crédito" }),
+      checkoutPanel(null));
   }
   return section;
 }

@@ -2,10 +2,11 @@
 
 /** Erro com código HTTP; as mensagens são mostradas ao usuário quando o status é < 500. */
 class HttpError extends Error {
-  constructor(status, message) {
+  constructor(status, message, publicMessage = "") {
     super(message);
     this.name = "HttpError";
     this.status = status;
+    this.publicMessage = publicMessage;
   }
 }
 

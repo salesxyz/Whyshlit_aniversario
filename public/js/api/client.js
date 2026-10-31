@@ -71,5 +71,13 @@ export const api = {
   checkout: (giftId, amount) =>
     request("/api/payments/checkout",
       { method: "POST", headers: JSON_HEADERS, body: JSON.stringify({ giftId, amount }) },
-      "Não foi possível iniciar o pagamento.")
+      "Não foi possível iniciar o pagamento."),
+
+  submitMessage: (name, message) =>
+    request("/api/messages",
+      { method: "POST", headers: JSON_HEADERS, body: JSON.stringify({ name, message }) },
+      "Não foi possível enviar sua mensagem."),
+
+  messages: () =>
+    request("/api/admin/messages", undefined, "Não foi possível carregar as mensagens.")
 };

@@ -7,6 +7,7 @@ const path = require("node:path");
 /** Armazenamento em arquivo JSON, para desenvolvimento local. Não use em produção. */
 function createFileStore({ dataDir, defaultState }) {
   const stateFile = path.join(dataDir, "state.json");
+  const messagesFile = path.join(dataDir, "messages.jsonl");
 
   async function load() {
     try {
@@ -33,7 +34,23 @@ function createFileStore({ dataDir, defaultState }) {
     }
   }
 
-  return { kind: "file", load, save };
+  async function addMessage(message) {
+    await fs.mkdir(dataDir, { recursive: true });
+    await fs.appendFile(messagesFile, JSON.stringify(message) + "\n", { encoding: "utf8", mode: 0o600 });
+  }
+
+  async function listMessages(limit) {
+    let content;
+    try {
+      content = await fs.readFile(messagesFile, "utf8");
+    } catch (cause) {
+      if (cause.code === "ENOENT") return [];
+      throw cause;
+    }
+    return content.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line)).reverse().slice(0, limit);
+  }
+
+  return { kind: "file", load, save, addMessage, listMessages };
 }
 
 module.exports = { createFileStore };

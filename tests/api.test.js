@@ -40,17 +40,31 @@ async function login(app, password = PASSWORD) {
   });
 }
 
-test("Asaas usa Sandbox por padrão e valida o ambiente", () => {
-  const sandbox = loadConfig({ ADMIN_PASSWORD: PASSWORD });
-  assert.equal(sandbox.asaas.environment, "sandbox");
-  assert.equal(sandbox.asaas.apiUrl, "https://api-sandbox.asaas.com/v3");
+test("Stripe usa a chave secreta apenas no servidor", () => {
+  const config = loadConfig({ ADMIN_PASSWORD: PASSWORD, STRIPE_SECRET_KEY: "sk_test_exemplo" });
+  assert.equal(config.stripe.secretKey, "sk_test_exemplo");
+  assert.equal(config.stripe.apiUrl, "https://api.stripe.com/v1");
+  assert.equal(startupProblem(config), "");
+});
 
-  const production = loadConfig({ ADMIN_PASSWORD: PASSWORD, ASAAS_ENVIRONMENT: "production" });
-  assert.equal(production.asaas.apiUrl, "https://api.asaas.com/v3");
-  assert.equal(production.asaas.checkoutUrl, "https://asaas.com/checkoutSession/show?id=");
+test("chave publicável não habilita o checkout Stripe", async (t) => {
+  const app = await startServer({
+    SUPABASE_URL: "https://exemplo.supabase.co",
+    SUPABASE_SERVICE_ROLE_KEY: "chave",
+    STRIPE_SECRET_KEY: "pk_live_exemplo"
+  });
+  t.after(() => app.close());
 
-  const invalid = loadConfig({ ADMIN_PASSWORD: PASSWORD, ASAAS_ENVIRONMENT: "prod" });
-  assert.equal(startupProblem(invalid), "ASAAS_ENVIRONMENT deve ser sandbox ou production.");
+  const status = await json(await fetch(app.base + "/api/status"));
+  assert.equal(status.payments, false);
+
+  const response = await fetch(app.base + "/api/payments/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: app.base },
+    body: JSON.stringify({ giftId: "ex1", amount: 10 })
+  });
+  assert.equal(response.status, 503);
+  assert.equal((await json(response)).error, "Erro interno do servidor.");
 });
 
 test("status e lista pública funcionam sem login", async (t) => {
@@ -123,6 +137,35 @@ test("sair encerra a sessão e cookie adulterado não vale", async (t) => {
   assert.equal(status.admin, false);
 });
 
+test("mensagens dos convidados ficam privadas e só o admin consulta a caixa de entrada", async (t) => {
+  const app = await startServer();
+  t.after(() => app.close());
+
+  const submit = (body, headers = { Origin: app.base, "Content-Type": "application/json" }) =>
+    fetch(app.base + "/api/messages", { method: "POST", headers, body: JSON.stringify(body) });
+
+  assert.equal((await fetch(app.base + "/api/admin/messages")).status, 401);
+  assert.equal((await submit({ name: "Ana", message: "Oi!" }, { "Content-Type": "application/json" })).status, 403);
+  assert.equal((await submit({ name: "Ana", message: "   " })).status, 400);
+  assert.equal((await submit({ name: "A".repeat(61), message: "Oi!" })).status, 400);
+
+  const sent = await submit({ name: "  Ana  ", message: "  Feliz aniversário!  " });
+  assert.equal(sent.status, 201);
+  assert.deepEqual(await json(sent), { sent: true });
+
+  const publicState = await json(await fetch(app.base + "/api/state"));
+  assert.equal(JSON.stringify(publicState).includes("Feliz aniversário!"), false);
+
+  const cookie = (await login(app)).headers.get("set-cookie").split(";")[0];
+  const inbox = await fetch(app.base + "/api/admin/messages", { headers: { Cookie: cookie } });
+  assert.equal(inbox.status, 200);
+  const items = await json(inbox);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].sender_name, "Ana");
+  assert.equal(items[0].message, "Feliz aniversário!");
+  assert.ok(items[0].created_at);
+});
+
 test("imagens e pagamentos pedem configuração do servidor", async (t) => {
   const app = await startServer();
   t.after(() => app.close());
@@ -160,17 +203,16 @@ test("com Supabase configurado a imagem redireciona para o bucket público", asy
   assert.equal(status.storage, "supabase");
 });
 
-test("checkout Asaas oferece Pix e cartão de crédito", async (t) => {
+test("checkout Stripe aceita somente cartão e valores em BRL", async (t) => {
   const app = await startServer({
     SUPABASE_URL: "https://exemplo.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "chave",
-    ASAAS_API_KEY: "asaas_test_key",
-    ASAAS_ENVIRONMENT: "sandbox"
+    STRIPE_SECRET_KEY: "sk_test_exemplo"
   });
   t.after(() => app.close());
 
   const originalFetch = global.fetch;
-  let asaasRequest;
+  let stripeRequest;
   global.fetch = async (input, options) => {
     const url = String(input);
     if (url.startsWith("https://exemplo.supabase.co/rest/v1/whylist_state?")) {
@@ -179,9 +221,9 @@ test("checkout Asaas oferece Pix e cartão de crédito", async (t) => {
         headers: { "Content-Type": "application/json" }
       });
     }
-    if (url === "https://api-sandbox.asaas.com/v3/checkouts") {
-      asaasRequest = options;
-      return new Response(JSON.stringify({ link: "https://sandbox.asaas.com/checkoutSession/show?id=test-checkout" }), {
+    if (url === "https://api.stripe.com/v1/checkout/sessions") {
+      stripeRequest = options;
+      return new Response(JSON.stringify({ url: "https://checkout.stripe.com/c/pay/cs_test_checkout" }), {
         status: 200,
         headers: { "Content-Type": "application/json" }
       });
@@ -190,23 +232,78 @@ test("checkout Asaas oferece Pix e cartão de crédito", async (t) => {
   };
 
   try {
+    const belowMinimum = await fetch(app.base + "/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: app.base },
+      body: JSON.stringify({ giftId: "ex1", amount: 49.99 })
+    });
+    assert.equal(belowMinimum.status, 400);
+    assert.equal((await json(belowMinimum)).error, "Informe uma contribuição entre R$ 50,00 e R$ 999.999,99.");
+
     const response = await fetch(app.base + "/api/payments/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: app.base },
-      body: JSON.stringify({ giftId: "ex1", amount: 10 })
+      body: JSON.stringify({ giftId: "ex1", amount: 50 })
     });
     assert.equal(response.status, 200);
-    assert.deepEqual(await json(response), { url: "https://sandbox.asaas.com/checkoutSession/show?id=test-checkout" });
-    const payload = JSON.parse(asaasRequest.body);
-    assert.deepEqual(payload.billingTypes, ["PIX", "CREDIT_CARD"]);
-    assert.deepEqual(payload.chargeTypes, ["DETACHED"]);
-    assert.equal(payload.items[0].name, "Fone de ouvido sem fio");
-    assert.equal(payload.items[0].value, 10);
-    assert.match(payload.items[0].imageBase64, /^[A-Za-z0-9+/]+=*$/);
-    assert.equal(payload.callback.successUrl, "http://127.0.0.1:" + new URL(app.base).port + "/?pagamento=retorno");
-    assert.equal(asaasRequest.headers.access_token, "asaas_test_key");
+    assert.deepEqual(await json(response), { url: "https://checkout.stripe.com/c/pay/cs_test_checkout" });
+    const payload = new URLSearchParams(stripeRequest.body);
+    assert.equal(payload.get("mode"), "payment");
+    assert.equal(payload.has("payment_method_types[0]"), false);
+    assert.equal(payload.has("payment_method_types[1]"), false);
+    assert.equal(payload.get("excluded_payment_method_types[0]"), "pix");
+    assert.equal(payload.get("line_items[0][price_data][currency]"), "brl");
+    assert.equal(payload.get("line_items[0][price_data][unit_amount]"), "5000");
+    assert.equal(payload.get("line_items[0][price_data][product_data][name]"), "Fone de ouvido sem fio");
+    assert.equal(payload.get("line_items[0][quantity]"), "1");
+    assert.equal(payload.get("success_url"), "http://127.0.0.1:" + new URL(app.base).port + "/?pagamento=retorno");
+    assert.equal(stripeRequest.headers.Authorization, "Bearer sk_test_exemplo");
     const status = await json(await fetch(app.base + "/api/status"));
     assert.equal(status.payments, true);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test("rejeição do Stripe retorna orientação segura para o checkout", async (t) => {
+  const app = await startServer({
+    SUPABASE_URL: "https://exemplo.supabase.co",
+    SUPABASE_SERVICE_ROLE_KEY: "chave",
+    STRIPE_SECRET_KEY: "sk_test_exemplo"
+  });
+  t.after(() => app.close());
+
+  const originalFetch = global.fetch;
+  global.fetch = async (input, options) => {
+    const url = String(input);
+    if (url.startsWith("https://exemplo.supabase.co/rest/v1/whylist_state?")) {
+      return new Response(JSON.stringify([{ state: JSON.parse(fs.readFileSync(path.join(__dirname, "..", "public", "default-state.json"), "utf8")) }]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    if (url === "https://api.stripe.com/v1/checkout/sessions") {
+      return new Response(JSON.stringify({
+        error: {
+          type: "invalid_request_error",
+          param: "excluded_payment_method_types",
+          message: "provider detail must not be sent to visitors"
+        }
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+    return originalFetch(input, options);
+  };
+
+  try {
+    const response = await fetch(app.base + "/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: app.base },
+      body: JSON.stringify({ giftId: "ex1", amount: 50 })
+    });
+    assert.equal(response.status, 502);
+    assert.deepEqual(await json(response), {
+      error: "Não foi possível iniciar o pagamento. Confira se cartão está ativo nas configurações de métodos de pagamento do Stripe."
+    });
   } finally {
     global.fetch = originalFetch;
   }

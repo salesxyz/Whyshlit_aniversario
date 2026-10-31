@@ -14,7 +14,6 @@ function loadConfig(env = process.env) {
   const adminPassword = env.ADMIN_PASSWORD || "";
   const supabaseUrl = (env.SUPABASE_URL || "").replace(/\/+$/, "");
   const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY || "";
-  const asaasEnvironment = env.ASAAS_ENVIRONMENT || "sandbox";
   const isVercel = Boolean(env.VERCEL);
 
   return Object.freeze({
@@ -39,15 +38,9 @@ function loadConfig(env = process.env) {
       serviceKey: supabaseKey,
       bucket: env.SUPABASE_STORAGE_BUCKET || "whylist-assets"
     }),
-    asaas: Object.freeze({
-      apiKey: env.ASAAS_API_KEY || "",
-      environment: asaasEnvironment,
-      apiUrl: asaasEnvironment === "production"
-        ? "https://api.asaas.com/v3"
-        : "https://api-sandbox.asaas.com/v3",
-      checkoutUrl: asaasEnvironment === "production"
-        ? "https://asaas.com/checkoutSession/show?id="
-        : "https://sandbox.asaas.com/checkoutSession/show?id="
+    stripe: Object.freeze({
+      secretKey: env.STRIPE_SECRET_KEY || "",
+      apiUrl: "https://api.stripe.com/v1"
     })
   });
 }
@@ -55,9 +48,6 @@ function loadConfig(env = process.env) {
 /** Mensagem de erro de configuração que impede o servidor de iniciar, ou "" se estiver tudo certo. */
 function startupProblem(config) {
   if (!Number.isInteger(config.port) || config.port < 1 || config.port > 65535) return "PORT inválida.";
-  if (!["sandbox", "production"].includes(config.asaas.environment)) {
-    return "ASAAS_ENVIRONMENT deve ser sandbox ou production.";
-  }
   if (config.adminPassword.length < config.adminPasswordMinLength) {
     return "Configure ADMIN_PASSWORD com pelo menos " + config.adminPasswordMinLength + " caracteres antes de iniciar.";
   }

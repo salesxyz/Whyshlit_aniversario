@@ -9,7 +9,7 @@ const SAME_ORIGIN_MESSAGE = "Origem da requisição inválida.";
  * Tabela de rotas da API. Cada rota declara o que exige (`sameOrigin`, `admin`) e devolve
  * `{ status, body, headers }` ou `{ redirect }`; quem monta a resposta HTTP é `index.js`.
  */
-function createRoutes({ config, auth, store, images, payments }) {
+function createRoutes({ config, auth, store, images, payments, messages }) {
   const apiReady = () => auth.isPasswordConfigured() && (config.supabase.enabled || !config.isVercel);
 
   return [
@@ -83,6 +83,18 @@ function createRoutes({ config, auth, store, images, payments }) {
       path: "/api/payments/checkout",
       sameOrigin: true,
       handle: async (ctx) => ({ body: await payments.createCheckout(ctx.req) })
+    },
+    {
+      method: "POST",
+      path: "/api/messages",
+      sameOrigin: true,
+      handle: async (ctx) => ({ status: 201, body: await messages.submit(ctx.req) })
+    },
+    {
+      method: "GET",
+      path: "/api/admin/messages",
+      admin: "Entre como administrador para consultar as mensagens.",
+      handle: async () => ({ body: await messages.list() })
     }
   ];
 }

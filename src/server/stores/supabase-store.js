@@ -1,6 +1,7 @@
 "use strict";
 
 const SELECT_STATE = "whylist_state?id=eq.1&select=state";
+const SELECT_MESSAGES = "whylist_messages?select=id,sender_name,message,created_at&order=created_at.desc&limit=";
 
 /** Armazenamento da lista na tabela `whylist_state` do Supabase (uma única linha, id = 1). */
 function createSupabaseStore({ supabase, defaultState }) {
@@ -28,7 +29,15 @@ function createSupabaseStore({ supabase, defaultState }) {
     );
   }
 
-  return { kind: "supabase", load, save };
+  async function addMessage(message) {
+    await supabase.insertRow("whylist_messages", message);
+  }
+
+  async function listMessages(limit) {
+    return supabase.selectRows(SELECT_MESSAGES + limit);
+  }
+
+  return { kind: "supabase", load, save, addMessage, listMessages };
 }
 
 module.exports = { createSupabaseStore };

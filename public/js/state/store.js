@@ -11,7 +11,7 @@ export const store = {
   saving: false,
   admin: false, // pode editar (sessão administrativa, ou site estático em que o dono é quem abre)
   backend: false, // há servidor com API
-  payments: false, // checkout Asaas disponível
+  payments: false, // checkout Stripe disponível
   canUploadImages: false
 };
 

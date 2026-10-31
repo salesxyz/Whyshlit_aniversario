@@ -12,6 +12,7 @@ import { loadLocalState } from "./state/local-storage.js";
 import { current, isEditing, notify, store, subscribe } from "./state/store.js";
 import { footer } from "./ui/footer.js";
 import { giftsSection } from "./ui/gift-card.js";
+import { guestMessageSection } from "./ui/guest-message.js";
 import { hero } from "./ui/hero.js";
 import { pixSection } from "./ui/pix-section.js";
 import { applySiteSettings } from "./ui/site.js";
@@ -51,6 +52,7 @@ function render() {
   } else {
     if (store.admin && store.mode === "view") parts.push(checklist(state));
     parts.push(pixSection(state, config), giftsSection(state, config));
+    if (store.backend) parts.push(guestMessageSection());
   }
   parts.push(footer());
   $("#app").replaceChildren(...parts.filter(Boolean));
@@ -63,7 +65,7 @@ function handleCheckoutReturn() {
   history.replaceState(null, "", location.pathname + location.hash);
   if (result === "cancelado") toast("Checkout fechado. As sugestões continuam disponíveis.");
   else if (result === "expirado") toast("O checkout expirou. As sugestões continuam disponíveis.");
-  else if (result === "retorno") toast("Você voltou do checkout. A confirmação do pagamento é feita pela Asaas.");
+  else if (result === "retorno") toast("Você voltou do checkout. Confira a confirmação do cartão no Stripe.");
   else toast("Retorno do checkout não reconhecido.");
 }
 

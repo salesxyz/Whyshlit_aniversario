@@ -50,6 +50,14 @@ function createSupabase(config) {
     });
   }
 
+  async function insertRow(table, row) {
+    await request("/rest/v1/" + table, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify(row)
+    });
+  }
+
   async function selectRows(query) {
     const response = await request("/rest/v1/" + query);
     const rows = await response.json();
@@ -74,7 +82,7 @@ function createSupabase(config) {
     return url + "/storage/v1/object/public/" + encodeURIComponent(bucket) + "/" + name;
   }
 
-  return { assertConfigured, upsertRow, selectRows, uploadObject, publicObjectUrl };
+  return { assertConfigured, upsertRow, insertRow, selectRows, uploadObject, publicObjectUrl };
 }
 
 module.exports = { createSupabase };

@@ -6,7 +6,7 @@ import { openLogin } from "../admin/login.js";
 
 export function footer() {
   const note = store.payments
-    ? "Pagamentos pelo checkout Asaas são processados pela Asaas. Pagamentos enviados diretamente à chave Pix não são detectados pelo site."
+    ? "Pagamentos com cartão são processados pela Stripe. O Pix é enviado diretamente para a chave cadastrada e não é detectado pelo site."
     : "O pagamento é feito direto no app do seu banco, para a chave Pix de quem faz aniversário. Esta página não confirma pagamentos.";
   const showLogin = store.backend && !store.admin && store.mode === "view";
   return h("footer", { class: "foot-row" },

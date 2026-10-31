@@ -25,6 +25,14 @@ function createStateStore({ config, supabase, defaultState }) {
     async save(state) {
       guard();
       return inner.save(state);
+    },
+    async addMessage(message) {
+      guard();
+      return inner.addMessage(message);
+    },
+    async listMessages(limit) {
+      guard();
+      return inner.listMessages(limit);
     }
   };
 }

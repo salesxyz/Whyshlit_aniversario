@@ -96,7 +96,7 @@ export async function logout() {
   store.admin = false;
   store.draft = null;
   store.mode = "view";
-  store.entryMode = "visitor";
+  store.entryMode = "welcome";
   store.dirty = false;
   notify();
   toast("Sessão administrativa encerrada.");
