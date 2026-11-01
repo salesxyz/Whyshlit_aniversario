@@ -63,7 +63,7 @@ O painel administrativo usa um cookie assinado, compatível com funções server
 
 - Na página inicial, escolha **Entrar como aniversariante**, informe `ADMIN_PASSWORD` e escolha **Editar lista**. Patrocinadores podem acessar a lista sem login.
 - Preencha nome, data, mensagem e dados Pix; adicione, edite ou remova presentes e salve. Com Supabase, as alterações ficam disponíveis aos visitantes.
-- Fotos são reduzidas no navegador e enviadas como JPEG ao bucket Supabase; o limite é 1 MB por imagem. Ícones continuam disponíveis.
+- Fotos podem ser escolhidas, arrastadas ou coladas no editor; são reduzidas no navegador e enviadas como JPEG ao bucket Supabase, com limite de 1 MB por imagem. Ícones continuam disponíveis.
 - O painel mostra um checklist do que falta publicar, permite reordenar presentes, visualizar como visitante e salvar com Ctrl+S; avisa se houver alterações não salvas.
 - Sem backend, as alterações ficam apenas no navegador. **Baixar configuração** exporta o JSON; é necessário publicá-lo novamente para atualizar um site estático.
 
