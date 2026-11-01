@@ -13,7 +13,7 @@ export function pixSection(state, config) {
   if (config.ok) {
     section.append(
       h("h2", { id: "pix-h", text: "Pix direto" }),
-      h("p", { class: "sub", text: "Escolha o valor do seu mimo." }),
+      h("p", { class: "sub", text: "Escolha um valor a partir de R$ 50,00." }),
       pixPanel(config, { amount: 0, idPrefix: "free" }));
   } else if (!hasKey && showsAdminHints()) {
     section.append(

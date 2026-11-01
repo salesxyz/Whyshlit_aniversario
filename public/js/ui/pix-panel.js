@@ -6,7 +6,7 @@ import { icon } from "../lib/icons.js";
 import { buildPix } from "../lib/pix.js";
 import { qrSvg } from "../lib/qr.js";
 import { toast } from "./toast.js";
-import { MAX_PRICE } from "../config.js";
+import { MAX_PRICE, MIN_CONTRIBUTION } from "../config.js";
 
 async function copyText(text) {
   try {
@@ -51,24 +51,26 @@ export function pixPanel(config, options) {
     id: prefix + "-amount",
     type: "text",
     inputmode: "decimal",
-    placeholder: "Digite o valor que preferir",
+    placeholder: "Mínimo R$ 50,00",
     autocomplete: "off",
-    value: options.amount ? String(options.amount).replace(".", ",") : ""
+    value: options.amount ? String(Math.max(options.amount, MIN_CONTRIBUTION)).replace(".", ",") : ""
   });
   const error = h("p", { class: "hint err", role: "status" });
   const qrBox = h("div", { class: "qr" });
   const summary = h("p", { class: "meta" });
   const code = h("textarea", { id: prefix + "-code", class: "code", readonly: true, rows: 4, "aria-label": "Pix copia e cola" });
+  const copyCode = copyButton("Copiar código", () => code.value, code);
 
   function update() {
     const amount = parseBRL(amountInput.value);
-    const invalid = amount !== null && (Number.isNaN(amount) || amount <= 0 || amount > MAX_PRICE);
-    error.textContent = invalid ? "Digite um valor entre R$ 0,01 e R$ 999.999,99." : "";
-    const value = amount !== null && !invalid ? amount : 0;
-    const payload = buildPix(config, value);
-    code.value = payload;
-    qrBox.replaceChildren(qrSvg(payload) || h("p", { class: "hint", text: "QR code indisponível. Use o Pix copia e cola." }));
-    summary.textContent = value ? "Valor: " + BRL.format(value) : "Valor livre: quem paga escolhe no app do banco.";
+    const invalid = amount === null || Number.isNaN(amount) || amount < MIN_CONTRIBUTION || amount > MAX_PRICE;
+    error.textContent = invalid ? "Informe um valor entre R$ 50,00 e R$ 999.999,99 para gerar o Pix." : "";
+    copyCode.disabled = invalid;
+    code.value = invalid ? "" : buildPix(config, amount);
+    qrBox.replaceChildren(invalid
+      ? h("p", { class: "hint", text: "Informe pelo menos R$ 50,00 para gerar o QR code." })
+      : qrSvg(code.value) || h("p", { class: "hint", text: "QR code indisponível. Use o Pix copia e cola." }));
+    summary.textContent = invalid ? "Valor mínimo: R$ 50,00." : "Valor: " + BRL.format(amount);
   }
 
   amountInput.addEventListener("input", update);
@@ -84,7 +86,5 @@ export function pixPanel(config, options) {
       h("p", { class: "meta" }, "Recebedor: ", h("b", { text: config.name })),
       h("label", { class: "label", for: prefix + "-code", text: "Pix copia e cola" }),
       code,
-      h("div", { class: "btn-row" },
-        copyButton("Copiar código", () => code.value, code),
-        copyButton("Copiar chave", () => config.key))));
+      h("div", { class: "btn-row" }, copyCode)));
 }

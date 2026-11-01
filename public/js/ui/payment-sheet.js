@@ -15,7 +15,7 @@ export function openPaymentSheet(gift, config, method = "pix") {
         ? pixPanel(config, { amount: gift.price || 0, idPrefix: "sheet" })
         : checkoutPanel(gift),
       direct
-        ? h("p", { class: "hint", text: "Pix direto para a chave cadastrada. A contribuição é opcional" })
+        ? h("p", { class: "hint", text: "Pix direto para a chave cadastrada. Contribuição opcional, com valor mínimo de R$ 50,00." })
         : null)
   });
   close.focus();
