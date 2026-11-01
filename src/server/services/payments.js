@@ -4,7 +4,7 @@ const crypto = require("node:crypto");
 const { HttpError, readJson } = require("../http");
 const { CONTRIBUTION_ID, MAX_PRICE } = require("../validation");
 
-const MIN_AMOUNT = 50;
+const MIN_AMOUNT = 149.90;
 const API_KEY_PATTERN = /^inchk_/;
 
 /** Contribuições por cartão de crédito pelo checkout hospedado da InfinitePay. */
@@ -29,7 +29,7 @@ function createPaymentService({ config, store, supabase }) {
 
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount < MIN_AMOUNT || amount > MAX_PRICE) {
-      throw new HttpError(400, "Informe uma contribuição entre R$ 50,00 e R$ 999.999,99.");
+      throw new HttpError(400, "Informe uma contribuição entre R$ 149,90 e R$ 999.999,99.");
     }
 
     const origin = new URL(req.headers.origin).origin;

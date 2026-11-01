@@ -52,8 +52,8 @@ O painel administrativo usa um cookie assinado, compatível com funções server
 ## Sugestões e contribuições
 
 - Os presentes são sugestões; não existe reserva, obrigação de compra nem indicação de que um item foi escolhido.
-- Se a InfinitePay estiver configurada, **Pagar com cartão** abre o checkout hospedado da InfinitePay. O cartão é pago à vista. Em presentes com valor definido, o valor é uma sugestão de contribuição; o convidado pode editá-lo. A contribuição mínima no cartão é R$ 50,00.
-- No Pix direto, o valor informado deve ser de pelo menos R$ 50,00. O QR code e o Pix copia e cola só são gerados a partir desse mínimo.
+- Se a InfinitePay estiver configurada, **Pagar com cartão** abre o checkout hospedado da InfinitePay. O cartão é pago à vista. Em presentes com valor definido, o valor é uma sugestão de contribuição; o convidado pode editá-lo. A contribuição mínima no cartão é R$ 149,90.
+- No Pix direto, o valor informado deve ser de pelo menos R$ 99,99. O QR code e o Pix copia e cola só são gerados a partir desse mínimo.
 - O retorno do checkout não confirma o pagamento. Confira a situação do cartão diretamente na InfinitePay; pagamentos Pix diretos não são detectados pelo site.
 - A página não registra o pagamento como status do presente. A lista permanece igual depois do checkout, inclusive se várias pessoas escolherem a mesma sugestão.
 - O botão **Contribuir com Pix** gera QR code e Pix copia e cola para a chave cadastrada, independentemente da configuração da InfinitePay. Transferências diretas não são confirmadas pelo site.

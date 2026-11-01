@@ -6,6 +6,7 @@ const assert = require("node:assert/strict");
 // Os módulos do navegador são ES modules; import() dinâmico os carrega a partir do CommonJS.
 const loadPix = () => import("../public/js/lib/pix.js");
 const loadFormat = () => import("../public/js/lib/format.js");
+const loadConfig = () => import("../public/js/config.js");
 
 const KEYS = [
   ["cpf", "123.456.789-09", "12345678909"],
@@ -18,6 +19,12 @@ const KEYS = [
 test("crc16 confere com o valor padrão CCITT-FALSE", async () => {
   const { crc16 } = await loadPix();
   assert.equal(crc16("123456789"), "29B1");
+});
+
+test("mínimo de Pix é R$ 99,99 sem alterar o mínimo do cartão", async () => {
+  const { MIN_PIX_AMOUNT, MIN_CARD_CONTRIBUTION } = await loadConfig();
+  assert.equal(MIN_PIX_AMOUNT, 99.99);
+  assert.equal(MIN_CARD_CONTRIBUTION, 149.90);
 });
 
 test("buildPix gera um código com CRC válido e valor opcional", async () => {

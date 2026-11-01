@@ -1,7 +1,7 @@
 // Contribuição por cartão pelo checkout hospedado da InfinitePay.
 
 import { api } from "../api/client.js";
-import { CONTRIBUTION_ID, MAX_PRICE, MIN_CONTRIBUTION } from "../config.js";
+import { CONTRIBUTION_ID, MAX_PRICE, MIN_CARD_CONTRIBUTION } from "../config.js";
 import { h } from "../lib/dom.js";
 import { parseBRL, priceToInput } from "../lib/format.js";
 import { field } from "./form.js";
@@ -27,7 +27,7 @@ export function checkoutPanel(gift, enabled = true) {
     type: "text",
     inputmode: "decimal",
     autocomplete: "off",
-    placeholder: "Ex.: 50,00",
+    placeholder: "Ex.: 149,90",
     disabled: !enabled,
     value: gift ? priceToInput(gift.price) : ""
   });
@@ -47,8 +47,8 @@ export function checkoutPanel(gift, enabled = true) {
 
   if (enabled) button.addEventListener("click", async () => {
     const value = parseBRL(amount.value);
-    if (value === null || Number.isNaN(value) || value < MIN_CONTRIBUTION || value > MAX_PRICE) {
-      message.textContent = "Informe um valor entre R$ 50,00 e R$ 999.999,99.";
+    if (value === null || Number.isNaN(value) || value < MIN_CARD_CONTRIBUTION || value > MAX_PRICE) {
+      message.textContent = "Informe um valor entre R$ 149,90 e R$ 999.999,99.";
       message.className = "hint err";
       amount.focus();
       return;
@@ -69,7 +69,7 @@ export function checkoutPanel(gift, enabled = true) {
 
   return h("div", { class: "pix-info" },
     field(gift ? "Contribuição sugerida (R$)" : "Valor da contribuição (R$)", "checkout-amount", amount,
-      suggested ? "Sugestão, se quiser você pode alterar. Mínimo R$ 50,00." : "Valor mínimo R$ 50,00."),
+      suggested ? "Sugestão, se quiser você pode alterar. Mínimo R$ 149,90." : "Valor mínimo R$ 149,90."),
     message,
     h("div", { class: "btn-row" }, button));
 }

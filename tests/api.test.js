@@ -235,21 +235,21 @@ test("checkout InfinitePay aceita somente cartão e valores em BRL", async (t) =
     const belowMinimum = await fetch(app.base + "/api/payments/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: app.base },
-      body: JSON.stringify({ giftId: "ex1", amount: 49.99 })
+      body: JSON.stringify({ giftId: "ex1", amount: 149.89 })
     });
     assert.equal(belowMinimum.status, 400);
-    assert.equal((await json(belowMinimum)).error, "Informe uma contribuição entre R$ 50,00 e R$ 999.999,99.");
+    assert.equal((await json(belowMinimum)).error, "Informe uma contribuição entre R$ 149,90 e R$ 999.999,99.");
 
     const response = await fetch(app.base + "/api/payments/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: app.base },
-      body: JSON.stringify({ giftId: "ex1", amount: 50 })
+      body: JSON.stringify({ giftId: "ex1", amount: 149.90 })
     });
     assert.equal(response.status, 200);
     assert.deepEqual(await json(response), { url: "https://checkout.infinitepay.io/example-checkout" });
     const payload = JSON.parse(infinitePayRequest.body);
     assert.equal(payload.items[0].quantity, 1);
-    assert.equal(payload.items[0].price, 5000);
+    assert.equal(payload.items[0].price, 14990);
     assert.equal(payload.items[0].description, "Fone de ouvido sem fio");
     assert.match(payload.order_nsu, /^[0-9a-f-]{36}$/);
     assert.equal(payload.redirect_url, "http://127.0.0.1:" + new URL(app.base).port + "/?pagamento=retorno");
@@ -297,7 +297,7 @@ test("rejeição da InfinitePay retorna orientação segura para o checkout", as
     const response = await fetch(app.base + "/api/payments/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: app.base },
-      body: JSON.stringify({ giftId: "ex1", amount: 50 })
+      body: JSON.stringify({ giftId: "ex1", amount: 149.90 })
     });
     assert.equal(response.status, 502);
     assert.deepEqual(await json(response), {
