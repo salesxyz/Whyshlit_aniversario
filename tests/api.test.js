@@ -249,9 +249,9 @@ test("checkout Stripe aceita somente cartão e valores em BRL", async (t) => {
     assert.deepEqual(await json(response), { url: "https://checkout.stripe.com/c/pay/cs_test_checkout" });
     const payload = new URLSearchParams(stripeRequest.body);
     assert.equal(payload.get("mode"), "payment");
-    assert.equal(payload.has("payment_method_types[0]"), false);
+    assert.equal(payload.get("payment_method_types[0]"), "card");
     assert.equal(payload.has("payment_method_types[1]"), false);
-    assert.equal(payload.get("excluded_payment_method_types[0]"), "pix");
+    assert.equal(payload.has("excluded_payment_method_types[0]"), false);
     assert.equal(payload.get("line_items[0][price_data][currency]"), "brl");
     assert.equal(payload.get("line_items[0][price_data][unit_amount]"), "5000");
     assert.equal(payload.get("line_items[0][price_data][product_data][name]"), "Fone de ouvido sem fio");
@@ -286,7 +286,7 @@ test("rejeição do Stripe retorna orientação segura para o checkout", async (
       return new Response(JSON.stringify({
         error: {
           type: "invalid_request_error",
-          param: "excluded_payment_method_types",
+          param: "payment_method_types",
           message: "provider detail must not be sent to visitors"
         }
       }), { status: 400, headers: { "Content-Type": "application/json" } });

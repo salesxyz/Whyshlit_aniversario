@@ -37,7 +37,7 @@ function createPaymentService({ config, store, supabase }) {
       mode: "payment",
       success_url: origin + "/?pagamento=retorno",
       cancel_url: origin + "/?pagamento=cancelado",
-      "excluded_payment_method_types[0]": "pix",
+      "payment_method_types[0]": "card",
       "line_items[0][price_data][currency]": "brl",
       "line_items[0][price_data][unit_amount]": String(Math.round(amount * 100)),
       "line_items[0][price_data][product_data][name]": name,

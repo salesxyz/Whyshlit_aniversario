@@ -44,7 +44,7 @@ Rode os testes com `npm test`. O frontend usa módulos ES: sem backend, sirva a 
    - `SUPABASE_SERVICE_ROLE_KEY`: chave `service_role`, somente no servidor. Nunca a coloque no frontend nem no controle de versão.
    - `SUPABASE_STORAGE_BUCKET`: opcional; por padrão `whylist-assets`. Se usar outro bucket, crie-o como público, limite uploads a JPEG de até 1 MB e mantenha a escrita restrita ao servidor.
    - `STRIPE_SECRET_KEY`: chave secreta Stripe. Comece com uma chave de teste (`sk_test_`) e mantenha-a somente no servidor.
-4. Habilite cartão em **Settings > Payments > Payment methods** na Stripe. O Checkout usa os métodos dinâmicos habilitados no Dashboard, exclui Pix e aceita cartão de crédito à vista em BRL. O Pix é feito diretamente pela chave cadastrada no site, fora da Stripe.
+4. Habilite cartão em **Settings > Payments > Payment methods** na Stripe. O Checkout aceita somente cartão de crédito à vista em BRL. O Pix é feito diretamente para a chave da conta cadastrada no site, fora da Stripe.
 5. Teste o checkout em modo de teste antes de substituir a chave por uma chave de produção (`sk_live_`).
 
 O painel administrativo usa um cookie assinado, compatível com funções serverless; não depende de sessões guardadas em memória. A lista e as imagens ficam no Supabase. O bucket é público somente para leitura das imagens; os uploads são feitos pela API autenticada do administrador.
@@ -61,7 +61,7 @@ O painel administrativo usa um cookie assinado, compatível com funções server
 
 ## Editar a lista
 
-- Na página inicial, escolha **Entrar como administrador**, informe `ADMIN_PASSWORD` e escolha **Editar lista**. Visitantes podem acessar a lista sem login.
+- Na página inicial, escolha **Entrar como aniversariante**, informe `ADMIN_PASSWORD` e escolha **Editar lista**. Patrocinadores podem acessar a lista sem login.
 - Preencha nome, data, mensagem e dados Pix; adicione, edite ou remova presentes e salve. Com Supabase, as alterações ficam disponíveis aos visitantes.
 - Fotos são reduzidas no navegador e enviadas como JPEG ao bucket Supabase; o limite é 1 MB por imagem. Ícones continuam disponíveis.
 - O painel mostra um checklist do que falta publicar, permite reordenar presentes, visualizar como visitante e salvar com Ctrl+S; avisa se houver alterações não salvas.

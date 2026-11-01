@@ -24,14 +24,14 @@ export function giftCard(gift, config) {
       onclick: () => openPaymentSheet(gift, config, "pix")
     }, "Contribuir com Pix"));
   }
-  if (store.payments) {
-    actions.append(h("button", {
-      class: "btn primary",
-      type: "button",
-      onclick: () => openPaymentSheet(gift, config, "card")
-    }, "Pagar com cartão"));
-  }
-  if (!config.ok && !store.payments) {
+  actions.append(h("button", {
+    class: "btn primary",
+    type: "button",
+    disabled: !store.payments,
+    title: store.payments ? null : "Conecte a Stripe no servidor para habilitar o pagamento.",
+    onclick: store.payments ? () => openPaymentSheet(gift, config, "card") : null
+  }, "Pagar com cartão"));
+  if (!config.ok) {
     actions.append(h("span", { class: "pill muted", text: "Pix ainda não configurado" }));
   }
   if (href) {

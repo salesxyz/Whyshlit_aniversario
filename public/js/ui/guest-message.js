@@ -43,7 +43,7 @@ export function guestMessageSection() {
   },
     field("Seu nome (opcional)", "guest-message-name", name),
     field("Sua mensagem", "guest-message-text", message),
-    h("p", { class: "hint", text: "A mensagem será privada e ficará visível somente ao administrador da lista." }),
+    h("p", { class: "hint", text: "A mensagem será privada e ficará visível ao aniversariante." }),
     status,
     h("div", { class: "btn-row" }, submit));
 

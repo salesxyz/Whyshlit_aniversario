@@ -26,10 +26,8 @@ export function pixSection(state, config) {
       h("h2", { id: "pix-h", text: "Pix" }),
       h("p", { class: "sub", text: hasKey ? config.msg : "O Pix desta lista ainda não foi configurado. Volte em breve." }));
   }
-  if (store.payments) {
-    section.append(
-      h("h2", { id: "card-h", text: "Pagar com cartão de crédito" }),
-      checkoutPanel(null));
-  }
+  section.append(
+    h("h2", { id: "card-h", text: "Pagar com cartão de crédito" }),
+    checkoutPanel(null, store.payments));
   return section;
 }

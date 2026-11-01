@@ -75,3 +75,16 @@ test("parseBRL e safeUrl", async () => {
   assert.equal(daysLeft("2026-12-25", new Date(2026, 11, 25)), 0);
   assert.equal(daysLeft("2026-01-10", new Date(2026, 11, 25)), 16);
 });
+
+test("birthdayCountdown calcula dias, horas e minutos até o aniversário", async () => {
+  const { birthdayCountdown } = await loadFormat();
+  assert.deepEqual(
+    birthdayCountdown("2026-01-02", new Date(2026, 0, 1, 12, 34)),
+    { days: 0, hours: 11, minutes: 26, isToday: false }
+  );
+  assert.deepEqual(
+    birthdayCountdown("2026-01-01", new Date(2026, 0, 1, 12, 34)),
+    { days: 0, hours: 0, minutes: 0, isToday: true }
+  );
+  assert.equal(birthdayCountdown("", new Date()), null);
+});

@@ -20,7 +20,7 @@ function stripeUrl(raw) {
 }
 
 /** `gift` é o presente escolhido, ou null para a contribuição de valor livre. */
-export function checkoutPanel(gift) {
+export function checkoutPanel(gift, enabled = true) {
   const suggested = Boolean(gift && gift.price > 0);
   const amount = h("input", {
     id: "checkout-amount",
@@ -28,16 +28,24 @@ export function checkoutPanel(gift) {
     inputmode: "decimal",
     autocomplete: "off",
     placeholder: "Ex.: 50,00",
+    disabled: !enabled,
     value: gift ? priceToInput(gift.price) : ""
   });
   const message = h("p", {
     class: "hint",
     role: "status",
-    text: "A lista é apenas uma sugestão: contribuir é opcional e não reserva nem altera o presente."
+    text: enabled
+      ? "A lista é apenas uma sugestão: contribuir é opcional e não reserva nem altera o presente."
+      : "Pagamento por cartão indisponível: a Stripe ainda não está conectada no servidor."
   });
-  const button = h("button", { class: "btn primary", type: "button" }, "Pagar com cartão de crédito");
+  const button = h("button", {
+    class: "btn primary",
+    type: "button",
+    disabled: !enabled,
+    title: enabled ? null : "Conecte a Stripe no servidor para habilitar o pagamento."
+  }, "Pagar com cartão de crédito");
 
-  button.addEventListener("click", async () => {
+  if (enabled) button.addEventListener("click", async () => {
     const value = parseBRL(amount.value);
     if (value === null || Number.isNaN(value) || value < MIN_CONTRIBUTION || value > MAX_PRICE) {
       message.textContent = "Informe um valor entre R$ 50,00 e R$ 999.999,99.";

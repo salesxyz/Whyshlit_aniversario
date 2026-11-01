@@ -50,6 +50,28 @@ export function daysLeft(s, now = new Date()) {
   return Math.round((next - today) / 864e5);
 }
 
+/** Tempo até o início do próximo aniversário, em dias, horas e minutos. */
+export function birthdayCountdown(s, now = new Date()) {
+  const p = parseDate(s);
+  if (!p) return null;
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let next = new Date(today.getFullYear(), p.m - 1, p.d);
+  const isToday = next.getTime() === today.getTime();
+  if (next < today) next = new Date(today.getFullYear() + 1, p.m - 1, p.d);
+  if (isToday) return { days: 0, hours: 0, minutes: 0, isToday: true };
+
+  const totalMinutes = Math.floor((next - now) / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const remainingMinutes = totalMinutes % 1440;
+  return {
+    days,
+    hours: Math.floor(remainingMinutes / 60),
+    minutes: remainingMinutes % 60,
+    isToday: false
+  };
+}
+
 export function formatDate(s) {
   const p = parseDate(s);
   return new Date(p.y, p.m - 1, p.d).toLocaleDateString("pt-BR", { day: "numeric", month: "long" });

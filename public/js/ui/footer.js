@@ -5,9 +5,7 @@ import { h } from "../lib/dom.js";
 import { openLogin } from "../admin/login.js";
 
 export function footer() {
-  const note = store.payments
-    ? "Pagamentos com cartão são processados pela Stripe. O Pix é enviado diretamente para a chave cadastrada e não é detectado pelo site."
-    : "O pagamento é feito direto no app do seu banco, para a chave Pix de quem faz aniversário. Esta página não confirma pagamentos.";
+  const note = store.payments 
   const showLogin = store.backend && !store.admin && store.mode === "view";
   return h("footer", { class: "foot-row" },
     h("p", { class: "foot", text: note }),
