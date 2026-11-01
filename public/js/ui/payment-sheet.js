@@ -15,7 +15,7 @@ export function openPaymentSheet(gift, config, method = "pix") {
         ? pixPanel(config, { amount: gift.price || 0, idPrefix: "sheet" })
         : checkoutPanel(gift),
       direct
-        ? h("p", { class: "hint", text: "Pix direto para a chave cadastrada. A contribuição é opcional e não altera nem reserva este presente." })
+        ? h("p", { class: "hint", text: "Pix direto para a chave cadastrada. A contribuição é opcional" })
         : null)
   });
   close.focus();
