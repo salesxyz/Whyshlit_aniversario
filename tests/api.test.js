@@ -40,18 +40,18 @@ async function login(app, password = PASSWORD) {
   });
 }
 
-test("Stripe usa a chave secreta apenas no servidor", () => {
-  const config = loadConfig({ ADMIN_PASSWORD: PASSWORD, STRIPE_SECRET_KEY: "sk_test_exemplo" });
-  assert.equal(config.stripe.secretKey, "sk_test_exemplo");
-  assert.equal(config.stripe.apiUrl, "https://api.stripe.com/v1");
+test("InfinitePay usa a chave secreta apenas no servidor", () => {
+  const config = loadConfig({ ADMIN_PASSWORD: PASSWORD, INFINITEPAY_API_KEY: "inchk_exemplo" });
+  assert.equal(config.infinitePay.apiKey, "inchk_exemplo");
+  assert.equal(config.infinitePay.apiUrl, "https://api.checkout.infinitepay.io");
   assert.equal(startupProblem(config), "");
 });
 
-test("chave publicável não habilita o checkout Stripe", async (t) => {
+test("chave em formato inválido não habilita o checkout InfinitePay", async (t) => {
   const app = await startServer({
     SUPABASE_URL: "https://exemplo.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "chave",
-    STRIPE_SECRET_KEY: "pk_live_exemplo"
+    INFINITEPAY_API_KEY: "chave_invalida"
   });
   t.after(() => app.close());
 
@@ -203,16 +203,16 @@ test("com Supabase configurado a imagem redireciona para o bucket público", asy
   assert.equal(status.storage, "supabase");
 });
 
-test("checkout Stripe aceita somente cartão e valores em BRL", async (t) => {
+test("checkout InfinitePay aceita somente cartão e valores em BRL", async (t) => {
   const app = await startServer({
     SUPABASE_URL: "https://exemplo.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "chave",
-    STRIPE_SECRET_KEY: "sk_test_exemplo"
+    INFINITEPAY_API_KEY: "inchk_exemplo"
   });
   t.after(() => app.close());
 
   const originalFetch = global.fetch;
-  let stripeRequest;
+  let infinitePayRequest;
   global.fetch = async (input, options) => {
     const url = String(input);
     if (url.startsWith("https://exemplo.supabase.co/rest/v1/whylist_state?")) {
@@ -221,9 +221,9 @@ test("checkout Stripe aceita somente cartão e valores em BRL", async (t) => {
         headers: { "Content-Type": "application/json" }
       });
     }
-    if (url === "https://api.stripe.com/v1/checkout/sessions") {
-      stripeRequest = options;
-      return new Response(JSON.stringify({ url: "https://checkout.stripe.com/c/pay/cs_test_checkout" }), {
+    if (url === "https://api.checkout.infinitepay.io/links") {
+      infinitePayRequest = options;
+      return new Response(JSON.stringify({ url: "https://checkout.infinitepay.io/example-checkout" }), {
         status: 200,
         headers: { "Content-Type": "application/json" }
       });
@@ -246,18 +246,17 @@ test("checkout Stripe aceita somente cartão e valores em BRL", async (t) => {
       body: JSON.stringify({ giftId: "ex1", amount: 50 })
     });
     assert.equal(response.status, 200);
-    assert.deepEqual(await json(response), { url: "https://checkout.stripe.com/c/pay/cs_test_checkout" });
-    const payload = new URLSearchParams(stripeRequest.body);
-    assert.equal(payload.get("mode"), "payment");
-    assert.equal(payload.get("payment_method_types[0]"), "card");
-    assert.equal(payload.has("payment_method_types[1]"), false);
-    assert.equal(payload.has("excluded_payment_method_types[0]"), false);
-    assert.equal(payload.get("line_items[0][price_data][currency]"), "brl");
-    assert.equal(payload.get("line_items[0][price_data][unit_amount]"), "5000");
-    assert.equal(payload.get("line_items[0][price_data][product_data][name]"), "Fone de ouvido sem fio");
-    assert.equal(payload.get("line_items[0][quantity]"), "1");
-    assert.equal(payload.get("success_url"), "http://127.0.0.1:" + new URL(app.base).port + "/?pagamento=retorno");
-    assert.equal(stripeRequest.headers.Authorization, "Bearer sk_test_exemplo");
+    assert.deepEqual(await json(response), { url: "https://checkout.infinitepay.io/example-checkout" });
+    const payload = JSON.parse(infinitePayRequest.body);
+    assert.equal(payload.items[0].quantity, 1);
+    assert.equal(payload.items[0].price, 5000);
+    assert.equal(payload.items[0].description, "Fone de ouvido sem fio");
+    assert.match(payload.order_nsu, /^[0-9a-f-]{36}$/);
+    assert.equal(payload.redirect_url, "http://127.0.0.1:" + new URL(app.base).port + "/?pagamento=retorno");
+    assert.equal(payload.options.single_payment, true);
+    assert.deepEqual(payload.options.payment_methods_enabled, ["credit_card"]);
+    assert.equal(infinitePayRequest.headers["X-Api-Key"], "inchk_exemplo");
+    assert.equal(infinitePayRequest.headers["Content-Type"], "application/json");
     const status = await json(await fetch(app.base + "/api/status"));
     assert.equal(status.payments, true);
   } finally {
@@ -265,11 +264,11 @@ test("checkout Stripe aceita somente cartão e valores em BRL", async (t) => {
   }
 });
 
-test("rejeição do Stripe retorna orientação segura para o checkout", async (t) => {
+test("rejeição da InfinitePay retorna orientação segura para o checkout", async (t) => {
   const app = await startServer({
     SUPABASE_URL: "https://exemplo.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "chave",
-    STRIPE_SECRET_KEY: "sk_test_exemplo"
+    INFINITEPAY_API_KEY: "inchk_exemplo"
   });
   t.after(() => app.close());
 
@@ -282,11 +281,11 @@ test("rejeição do Stripe retorna orientação segura para o checkout", async (
         headers: { "Content-Type": "application/json" }
       });
     }
-    if (url === "https://api.stripe.com/v1/checkout/sessions") {
+    if (url === "https://api.checkout.infinitepay.io/links") {
       return new Response(JSON.stringify({
         error: {
           type: "invalid_request_error",
-          param: "payment_method_types",
+          param: "payment_methods_enabled",
           message: "provider detail must not be sent to visitors"
         }
       }), { status: 400, headers: { "Content-Type": "application/json" } });
@@ -302,7 +301,7 @@ test("rejeição do Stripe retorna orientação segura para o checkout", async (
     });
     assert.equal(response.status, 502);
     assert.deepEqual(await json(response), {
-      error: "Não foi possível iniciar o pagamento. Confira se cartão está ativo nas configurações de métodos de pagamento do Stripe."
+      error: "Não foi possível iniciar o pagamento. Confira a chave e a configuração do Checkout Integrado da InfinitePay."
     });
   } finally {
     global.fetch = originalFetch;

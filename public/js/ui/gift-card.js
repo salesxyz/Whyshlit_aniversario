@@ -28,7 +28,7 @@ export function giftCard(gift, config) {
     class: "btn primary",
     type: "button",
     disabled: !store.payments,
-    title: store.payments ? null : "Conecte a Stripe no servidor para habilitar o pagamento.",
+    title: store.payments ? null : "Conecte a InfinitePay no servidor para habilitar o pagamento.",
     onclick: store.payments ? () => openPaymentSheet(gift, config, "card") : null
   }, "Pagar com cartão"));
   if (!config.ok) {

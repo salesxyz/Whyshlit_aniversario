@@ -65,7 +65,7 @@ function handleCheckoutReturn() {
   history.replaceState(null, "", location.pathname + location.hash);
   if (result === "cancelado") toast("Checkout fechado. As sugestões continuam disponíveis.");
   else if (result === "expirado") toast("O checkout expirou. As sugestões continuam disponíveis.");
-  else if (result === "retorno") toast("Você voltou do checkout. Confira a confirmação do cartão no Stripe.");
+  else if (result === "retorno") toast("Você voltou do checkout. Confira a confirmação do pagamento na InfinitePay.");
   else toast("Retorno do checkout não reconhecido.");
 }
 

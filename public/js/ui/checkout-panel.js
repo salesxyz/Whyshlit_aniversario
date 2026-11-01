@@ -1,4 +1,4 @@
-// Contribuição por cartão pelo checkout hospedado do Stripe.
+// Contribuição por cartão pelo checkout hospedado da InfinitePay.
 
 import { api } from "../api/client.js";
 import { CONTRIBUTION_ID, MAX_PRICE, MIN_CONTRIBUTION } from "../config.js";
@@ -6,15 +6,15 @@ import { h } from "../lib/dom.js";
 import { parseBRL, priceToInput } from "../lib/format.js";
 import { field } from "./form.js";
 
-function stripeUrl(raw) {
+function infinitePayUrl(raw) {
   let url;
   try {
     url = new URL(raw);
   } catch {
-    throw new Error("O Stripe retornou um endereço de pagamento inválido.");
+    throw new Error("A InfinitePay retornou um endereço de pagamento inválido.");
   }
-  if (url.protocol !== "https:" || url.hostname !== "checkout.stripe.com") {
-    throw new Error("O endereço de pagamento não pertence ao Stripe.");
+  if (url.protocol !== "https:" || url.hostname !== "checkout.infinitepay.io") {
+    throw new Error("O endereço de pagamento não pertence à InfinitePay.");
   }
   return url.href;
 }
@@ -36,13 +36,13 @@ export function checkoutPanel(gift, enabled = true) {
     role: "status",
     text: enabled
       ? "A lista é apenas uma sugestão: contribuir é opcional e não reserva nem altera o presente."
-      : "Pagamento por cartão indisponível: a Stripe ainda não está conectada no servidor."
+      : "Pagamento por cartão indisponível: a InfinitePay ainda não está conectada no servidor."
   });
   const button = h("button", {
     class: "btn primary",
     type: "button",
     disabled: !enabled,
-    title: enabled ? null : "Conecte a Stripe no servidor para habilitar o pagamento."
+    title: enabled ? null : "Conecte a InfinitePay no servidor para habilitar o pagamento."
   }, "Pagar com cartão de crédito");
 
   if (enabled) button.addEventListener("click", async () => {
@@ -58,7 +58,7 @@ export function checkoutPanel(gift, enabled = true) {
     message.textContent = "";
     try {
       const body = await api.checkout(gift ? gift.id : CONTRIBUTION_ID, value);
-      window.location.assign(stripeUrl(body.url));
+      window.location.assign(infinitePayUrl(body.url));
     } catch (error) {
       message.textContent = error.message || "Não foi possível conectar ao servidor.";
       message.className = "hint err";

@@ -38,9 +38,9 @@ function loadConfig(env = process.env) {
       serviceKey: supabaseKey,
       bucket: env.SUPABASE_STORAGE_BUCKET || "whylist-assets"
     }),
-    stripe: Object.freeze({
-      secretKey: env.STRIPE_SECRET_KEY || "",
-      apiUrl: "https://api.stripe.com/v1"
+    infinitePay: Object.freeze({
+      apiKey: env.INFINITEPAY_API_KEY || "",
+      apiUrl: "https://api.checkout.infinitepay.io"
     })
   });
 }

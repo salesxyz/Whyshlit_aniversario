@@ -1,22 +1,24 @@
 "use strict";
 
+const crypto = require("node:crypto");
 const { HttpError, readJson } = require("../http");
 const { CONTRIBUTION_ID, MAX_PRICE } = require("../validation");
 
 const MIN_AMOUNT = 50;
-const SECRET_KEY_PATTERN = /^sk_(test|live)_/;
+const API_KEY_PATTERN = /^inchk_/;
 
-/** Contribuições por cartão de crédito pelo checkout hospedado do Stripe. */
+/** Contribuições por cartão de crédito pelo checkout hospedado da InfinitePay. */
 function createPaymentService({ config, store, supabase }) {
   function isEnabled() {
-    return Boolean(config.supabase.enabled && SECRET_KEY_PATTERN.test(config.stripe.secretKey));
+    return Boolean(config.supabase.enabled && API_KEY_PATTERN.test(config.infinitePay.apiKey));
   }
 
   async function createCheckout(req) {
     supabase.assertConfigured();
-    if (!SECRET_KEY_PATTERN.test(config.stripe.secretKey)) {
-      throw new HttpError(503, "Configure STRIPE_SECRET_KEY com uma chave secreta sk_test_ ou sk_live_ no ambiente do servidor.");
+    if (!API_KEY_PATTERN.test(config.infinitePay.apiKey)) {
+      throw new HttpError(503, "Configure INFINITEPAY_API_KEY com a chave do Checkout Integrado no servidor.");
     }
+
     const body = await readJson(req, 4096);
     if (!body || typeof body.giftId !== "string") throw new HttpError(400, "Presente inválido.");
 
@@ -32,62 +34,61 @@ function createPaymentService({ config, store, supabase }) {
 
     const origin = new URL(req.headers.origin).origin;
     const name = (gift ? gift.name : "Contribuição para a lista").slice(0, 30);
-    const description = (gift ? gift.note || gift.name : "Contribuição para a lista").slice(0, 150);
-    const payload = new URLSearchParams({
-      mode: "payment",
-      success_url: origin + "/?pagamento=retorno",
-      cancel_url: origin + "/?pagamento=cancelado",
-      "payment_method_types[0]": "card",
-      "line_items[0][price_data][currency]": "brl",
-      "line_items[0][price_data][unit_amount]": String(Math.round(amount * 100)),
-      "line_items[0][price_data][product_data][name]": name,
-      "line_items[0][price_data][product_data][description]": description,
-      "line_items[0][quantity]": "1",
-      client_reference_id: body.giftId
-    });
+    const payload = {
+      items: [{
+        quantity: 1,
+        price: Math.round(amount * 100),
+        description: name
+      }],
+      order_nsu: crypto.randomUUID(),
+      redirect_url: origin + "/?pagamento=retorno",
+      options: {
+        single_payment: true,
+        payment_methods_enabled: ["credit_card"]
+      }
+    };
+
     let response;
     try {
-      response = await fetch(config.stripe.apiUrl + "/checkout/sessions", {
+      response = await fetch(config.infinitePay.apiUrl + "/links", {
         method: "POST",
         headers: {
-          Authorization: "Bearer " + config.stripe.secretKey,
-          "Content-Type": "application/x-www-form-urlencoded"
+          "X-Api-Key": config.infinitePay.apiKey,
+          "Content-Type": "application/json"
         },
-        body: payload.toString(),
+        body: JSON.stringify(payload),
         signal: AbortSignal.timeout(15000)
       });
     } catch {
-      throw new HttpError(502, "Não foi possível conectar ao Stripe. Tente novamente.");
+      throw new HttpError(502, "Não foi possível conectar à InfinitePay. Tente novamente.");
     }
 
     let result;
     try {
       result = await response.json();
     } catch {
-      throw new HttpError(502, "O Stripe retornou uma resposta inválida.");
+      throw new HttpError(502, "A InfinitePay retornou uma resposta inválida.");
     }
     if (!result || typeof result !== "object" || Array.isArray(result)) {
-      throw new HttpError(502, "O Stripe retornou uma resposta inválida.");
+      throw new HttpError(502, "A InfinitePay retornou uma resposta inválida.");
     }
 
-    const checkoutLink = typeof result.url === "string" ? result.url : "";
-    if (!response.ok || !checkoutLink) {
-      const error = result.error && typeof result.error === "object" ? result.error : {};
-      console.error(
-        "Falha ao criar Checkout Stripe:",
-        response.status,
-        error.type || "erro desconhecido",
-        error.code || "",
-        error.param || "",
-        response.headers.get("request-id") || ""
-      );
+    let checkoutUrl;
+    try {
+      checkoutUrl = new URL(typeof result.url === "string" ? result.url : "");
+    } catch {
+      checkoutUrl = null;
+    }
+    if (!response.ok || !checkoutUrl || checkoutUrl.protocol !== "https:" ||
+        checkoutUrl.hostname !== "checkout.infinitepay.io") {
+      console.error("Falha ao criar Checkout InfinitePay:", response.status);
       throw new HttpError(
         502,
-        "Não foi possível iniciar o checkout Stripe.",
-        "Não foi possível iniciar o pagamento. Confira se cartão está ativo nas configurações de métodos de pagamento do Stripe."
+        "Não foi possível iniciar o checkout InfinitePay.",
+        "Não foi possível iniciar o pagamento. Confira a chave e a configuração do Checkout Integrado da InfinitePay."
       );
     }
-    return { url: checkoutLink };
+    return { url: checkoutUrl.href };
   }
 
   return { isEnabled, createCheckout };
