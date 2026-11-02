@@ -7,6 +7,7 @@ export const store = {
   draft: null, // cópia em edição; só existe nos modos "edit" e "preview"
   mode: "view", // "view" (visitante/administrador), "edit" (editando) ou "preview" (visão do convidado)
   entryMode: "welcome", // "welcome", "visitor" ou "admin"
+  themeOverride: null,
   dirty: false,
   saving: false,
   admin: false, // pode editar (sessão administrativa, ou site estático em que o dono é quem abre)

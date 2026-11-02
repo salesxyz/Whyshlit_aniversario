@@ -22,10 +22,17 @@ import { openLogin } from "./admin/login.js";
 
 function render() {
   const state = current();
-  applySiteSettings(state);
+  const editing = isEditing() || store.mode === "preview";
+  applySiteSettings(state, editing ? null : store.themeOverride);
   if (store.entryMode === "welcome") {
     $("#admin-bar").replaceChildren();
     $("#app").replaceChildren(welcome(state, {
+      theme: store.themeOverride || (state.theme === "dark" ||
+        (state.theme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light"),
+      onThemeChange: (theme) => {
+        store.themeOverride = theme;
+        applySiteSettings(state, theme);
+      },
       onVisitor: () => {
         store.admin = false;
         store.entryMode = "visitor";

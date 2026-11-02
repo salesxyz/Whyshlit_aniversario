@@ -3,10 +3,32 @@
 import { h } from "../lib/dom.js";
 import { icon } from "../lib/icons.js";
 
-export function welcome(state, { onVisitor, onAdmin }) {
+export function welcome(state, { onVisitor, onAdmin, onThemeChange, theme }) {
   const honoree = String(state.honoree || "").trim();
+  const lightTheme = h("button", {
+    class: "welcome-theme-option",
+    type: "button",
+    "aria-pressed": String(theme === "light"),
+    onclick: () => selectTheme("light")
+  }, "Claro");
+  const darkTheme = h("button", {
+    class: "welcome-theme-option",
+    type: "button",
+    "aria-pressed": String(theme === "dark"),
+    onclick: () => selectTheme("dark")
+  }, "Escuro");
+  function selectTheme(value) {
+    lightTheme.setAttribute("aria-pressed", String(value === "light"));
+    darkTheme.setAttribute("aria-pressed", String(value === "dark"));
+    onThemeChange(value);
+  }
+
   return h("section", { class: "welcome", "aria-labelledby": "welcome-title" },
     h("div", { class: "welcome-card" },
+      h("div", { class: "welcome-theme", role: "group", "aria-label": "Tema da página" },
+        h("span", { class: "welcome-theme-label", text: "Tema" }),
+        lightTheme,
+        darkTheme),
       h("p", { class: "eyebrow", text: "1.8 do Victor - Momento de celebração e lembrança" }),
       h("h1", { id: "welcome-title", text: "Bem-vindo a lista de sugestões do Victor" }),
       h("p", { class: "welcome-intro", text: honoree
