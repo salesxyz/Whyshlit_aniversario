@@ -51,9 +51,12 @@ export function pixPanel(config, options) {
     id: prefix + "-amount",
     type: "text",
     inputmode: "decimal",
-    placeholder: "Mínimo R$ 99,99",
+    placeholder: options.fixedAmount ? "Valor definido" : "Mínimo R$ 99,99",
     autocomplete: "off",
-    value: options.amount ? String(Math.max(options.amount, MIN_PIX_AMOUNT)).replace(".", ",") : ""
+    readonly: Boolean(options.fixedAmount),
+    value: options.amount
+      ? String(options.fixedAmount ? options.amount : Math.max(options.amount, MIN_PIX_AMOUNT)).replace(".", ",")
+      : ""
   });
   const error = h("p", { class: "hint err", role: "status" });
   const qrBox = h("div", { class: "qr" });
@@ -63,12 +66,15 @@ export function pixPanel(config, options) {
 
   function update() {
     const amount = parseBRL(amountInput.value);
-    const invalid = amount === null || Number.isNaN(amount) || amount < MIN_PIX_AMOUNT || amount > MAX_PRICE;
+    const invalid = amount === null || Number.isNaN(amount) ||
+      (!options.fixedAmount && amount < MIN_PIX_AMOUNT) || amount > MAX_PRICE;
     error.textContent = invalid ? "Informe um valor entre R$ 99,99 e R$ 999.999,99 para gerar o Pix." : "";
     copyCode.disabled = invalid;
     code.value = invalid ? "" : buildPix(config, amount);
     qrBox.replaceChildren(invalid
-      ? h("p", { class: "hint", text: "Informe pelo menos R$ 99,99 para gerar o QR code." })
+      ? h("p", { class: "hint", text: options.fixedAmount
+        ? "Não foi possível gerar o Pix para este valor."
+        : "Informe pelo menos R$ 99,99 para gerar o QR code." })
       : qrSvg(code.value) || h("p", { class: "hint", text: "QR code indisponível. Use o Pix copia e cola." }));
     summary.textContent = invalid ? "Valor mínimo: R$ 99,99." : "Valor: " + BRL.format(amount);
   }

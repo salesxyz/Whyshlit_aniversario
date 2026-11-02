@@ -12,10 +12,12 @@ export function openPaymentSheet(gift, config, method = "pix") {
     content: h("div", { class: "sheet-body" },
       gift.note ? h("p", { class: "note", text: gift.note }) : null,
       direct
-        ? pixPanel(config, { amount: gift.price || 0, idPrefix: "sheet" })
+        ? pixPanel(config, { amount: gift.price || 0, fixedAmount: gift.price > 0, idPrefix: "sheet" })
         : checkoutPanel(gift),
       direct
-        ? h("p", { class: "hint", text: "Pix direto para a chave cadastrada. Contribuição opcional, com valor mínimo de R$ 99,99." })
+        ? h("p", { class: "hint", text: gift.price > 0
+          ? "Pix direto para a chave cadastrada. O valor definido para este presente será cobrado exatamente assim."
+          : "Pix direto para a chave cadastrada. Contribuição opcional, com valor mínimo de R$ 99,99." })
         : null)
   });
   close.focus();

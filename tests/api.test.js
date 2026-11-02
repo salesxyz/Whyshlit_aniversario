@@ -216,7 +216,9 @@ test("checkout InfinitePay aceita somente cartão e valores em BRL", async (t) =
   global.fetch = async (input, options) => {
     const url = String(input);
     if (url.startsWith("https://exemplo.supabase.co/rest/v1/whylist_state?")) {
-      return new Response(JSON.stringify([{ state: JSON.parse(fs.readFileSync(path.join(__dirname, "..", "public", "default-state.json"), "utf8")) }]), {
+      const state = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "public", "default-state.json"), "utf8"));
+      state.gifts[0].price = 110;
+      return new Response(JSON.stringify([{ state }]), {
         status: 200,
         headers: { "Content-Type": "application/json" }
       });
@@ -235,7 +237,7 @@ test("checkout InfinitePay aceita somente cartão e valores em BRL", async (t) =
     const belowMinimum = await fetch(app.base + "/api/payments/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: app.base },
-      body: JSON.stringify({ giftId: "ex1", amount: 149.89 })
+      body: JSON.stringify({ giftId: "ex6", amount: 149.89 })
     });
     assert.equal(belowMinimum.status, 400);
     assert.equal((await json(belowMinimum)).error, "Informe uma contribuição entre R$ 149,90 e R$ 999.999,99.");
@@ -243,13 +245,13 @@ test("checkout InfinitePay aceita somente cartão e valores em BRL", async (t) =
     const response = await fetch(app.base + "/api/payments/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: app.base },
-      body: JSON.stringify({ giftId: "ex1", amount: 149.90 })
+      body: JSON.stringify({ giftId: "ex1", amount: 110 })
     });
     assert.equal(response.status, 200);
     assert.deepEqual(await json(response), { url: "https://checkout.infinitepay.io/example-checkout" });
     const payload = JSON.parse(infinitePayRequest.body);
     assert.equal(payload.items[0].quantity, 1);
-    assert.equal(payload.items[0].price, 14990);
+    assert.equal(payload.items[0].price, 11000);
     assert.equal(payload.items[0].description, "Fone de ouvido sem fio");
     assert.match(payload.order_nsu, /^[0-9a-f-]{36}$/);
     assert.equal(payload.redirect_url, "http://127.0.0.1:" + new URL(app.base).port + "/?pagamento=retorno");

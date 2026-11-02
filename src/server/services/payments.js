@@ -27,8 +27,9 @@ function createPaymentService({ config, store, supabase }) {
     const gift = contribution ? null : state.gifts.find((item) => item.id === body.giftId);
     if (!contribution && !gift) throw new HttpError(404, "Esse presente não está mais na lista.");
 
-    const amount = Number(body.amount);
-    if (!Number.isFinite(amount) || amount < MIN_AMOUNT || amount > MAX_PRICE) {
+    const fixedGiftAmount = Boolean(gift && gift.price > 0);
+    const amount = fixedGiftAmount ? gift.price : Number(body.amount);
+    if (!Number.isFinite(amount) || (!fixedGiftAmount && amount < MIN_AMOUNT) || amount <= 0 || amount > MAX_PRICE) {
       throw new HttpError(400, "Informe uma contribuição entre R$ 149,90 e R$ 999.999,99.");
     }
 

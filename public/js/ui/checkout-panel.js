@@ -21,7 +21,7 @@ function infinitePayUrl(raw) {
 
 /** `gift` é o presente escolhido, ou null para a contribuição de valor livre. */
 export function checkoutPanel(gift, enabled = true) {
-  const suggested = Boolean(gift && gift.price > 0);
+  const fixedAmount = Boolean(gift && gift.price > 0);
   const amount = h("input", {
     id: "checkout-amount",
     type: "text",
@@ -29,13 +29,16 @@ export function checkoutPanel(gift, enabled = true) {
     autocomplete: "off",
     placeholder: "Ex.: 149,90",
     disabled: !enabled,
-    value: gift ? priceToInput(gift.price) : ""
+    readonly: fixedAmount,
+    value: fixedAmount ? priceToInput(gift.price) : ""
   });
   const message = h("p", {
     class: "hint",
     role: "status",
     text: enabled
-      ? "A lista é apenas uma sugestão: contribuir é opcional e não reserva nem altera o presente."
+      ? fixedAmount
+        ? "O valor do presente foi definido pelo aniversariante e será cobrado exatamente assim."
+        : "A lista é apenas uma sugestão: contribuir é opcional e não reserva nem altera o presente."
       : "Pagamento por cartão indisponível: a InfinitePay ainda não está conectada no servidor."
   });
   const button = h("button", {
@@ -47,7 +50,8 @@ export function checkoutPanel(gift, enabled = true) {
 
   if (enabled) button.addEventListener("click", async () => {
     const value = parseBRL(amount.value);
-    if (value === null || Number.isNaN(value) || value < MIN_CARD_CONTRIBUTION || value > MAX_PRICE) {
+    if (value === null || Number.isNaN(value) ||
+        (!fixedAmount && value < MIN_CARD_CONTRIBUTION) || value > MAX_PRICE) {
       message.textContent = "Informe um valor entre R$ 149,90 e R$ 999.999,99.";
       message.className = "hint err";
       amount.focus();
@@ -68,8 +72,8 @@ export function checkoutPanel(gift, enabled = true) {
   });
 
   return h("div", { class: "pix-info" },
-    field(gift ? "Contribuição sugerida (R$)" : "Valor da contribuição (R$)", "checkout-amount", amount,
-      suggested ? "Sugestão, se quiser você pode alterar. Mínimo R$ 149,90." : "Valor mínimo R$ 149,90."),
+    field(fixedAmount ? "Valor do presente (R$)" : "Valor da contribuição (R$)", "checkout-amount", amount,
+      fixedAmount ? "Valor definido pelo aniversariante." : "Valor mínimo R$ 149,90."),
     message,
     h("div", { class: "btn-row" }, button));
 }
